@@ -4,8 +4,10 @@ import styles from '../client/styles/Home.module.css';
 
 const Home: NextPage = () => {
   const [topic, setTopic] = useState('');
+  const [role, setRole] = useState('');
   const [learningPath, setLearningPath] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -20,10 +22,19 @@ const Home: NextPage = () => {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ topic }),
+        body: JSON.stringify({ topic, role }),
       });
       
-      const data = await response.json();
+      const textResponse = await response.text();
+      console.log('Raw server response:', textResponse);
+      
+      let data;
+      try {
+        data = JSON.parse(textResponse);
+      } catch (parseError) {
+        console.error('Failed to parse server response:', textResponse);
+        throw new Error('Invalid server response');
+      }
       
       if (!response.ok) {
         throw new Error(data.message || 'Failed to create learning path');
@@ -33,8 +44,8 @@ const Home: NextPage = () => {
       console.log('Learning path created:', data);
       
     } catch (error) {
-      console.error('Error creating learning path:', error);
-      alert(error instanceof Error ? error.message : 'An unexpected error occurred');
+      console.error('Error details:', error);
+      setError(error instanceof Error ? error.message : 'An unknown error occurred');
     } finally {
       setLoading(false);
     }
@@ -46,18 +57,28 @@ const Home: NextPage = () => {
         <h1 className={styles.title}>
           Learn Anything
         </h1>
-
         <p className={styles.description}>
-          Enter a topic you want to learn
+          Enter a topic you want to learn and your role
         </p>
-
         <form onSubmit={handleSubmit} className={styles.inputContainer}>
+          <h3>Your Role</h3>
           <input
             type="text"
+            value={role}
+            onChange={(e) => setRole(e.target.value)}
+            placeholder="I am a..."
+            className={styles.input}
+            style={{ marginBottom: '1rem' }}
+          />
+          
+          <h3>Learning Topic</h3>
+          <textarea
             value={topic}
             onChange={(e) => setTopic(e.target.value)}
-            placeholder="Enter a topic..."
+            placeholder="Enter a topic you want to learn about in detail..."
             className={styles.input}
+            rows={4}
+            style={{ resize: 'vertical', minHeight: '100px' }}
           />
           <button
             type="submit"
@@ -68,8 +89,13 @@ const Home: NextPage = () => {
         </form>
 
         {loading && (
-          <div className={styles.loading}>
-            Generating your learning path...
+          <div className={styles.loadingOverlay}>
+            <div className={styles.loadingContent}>
+              <div className={styles.progressBar}>
+                <div className={styles.progressBarFill}></div>
+              </div>
+              <p>Generating your learning path...</p>
+            </div>
           </div>
         )}
 

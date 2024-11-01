@@ -17,54 +17,104 @@ export default async function handler(
     return res.status(405).json({ message: 'Method not allowed' });
   }
 
-  const { topic } = req.body;
+  const { topic, role } = req.body;
   if (!topic?.trim()) {
     return res.status(400).json({ message: 'Topic is required' });
   }
+  if (!role?.trim()) {
+    return res.status(400).json({ message: 'Role is required' });
+  }
 
   try {
-    // 2. Test database connection first
-    console.log('Connecting to MongoDB...');
-    await dbConnect();
-    console.log('MongoDB connected successfully');
+    // Add API key validation
+    if (!process.env.CLAUDE_API_KEY) {
+      console.error('CLAUDE_API_KEY is not configured');
+      return res.status(500).json({ message: 'API configuration error' });
+    }
 
-    // 3. Simplified Claude prompt focused on JSON structure
-    const prompt = `Generate a learning path for "${topic}" and return it ONLY as a JSON object with this exact structure:
+    // 2. Test database connection first with retry logic
+    console.log('Connecting to MongoDB...');
+    try {
+      await dbConnect();
+      console.log('MongoDB connected successfully');
+    } catch (dbError) {
+      console.error('MongoDB connection error:', dbError);
+      return res.status(500).json({
+        message: 'Database connection error',
+        error: dbError instanceof Error ? dbError.message : 'Unknown database error'
+      });
+    }
+
+    // Add request timeout
+    const timeoutPromise = new Promise((_, reject) => 
+      setTimeout(() => reject(new Error('Request timeout')), 30000)
+    );
+
+    // 3. Updated Claude prompt with role-specific speaking style
+    const prompt = `Generate a learning path for "${topic}" specifically tailored for someone who is a "${role}". 
+Adapt the language and explanations to match how a "${role}" would typically communicate and think about problems.
+Return it ONLY as a JSON object with this exact structure:
 {
   "title": "Learning ${topic}",
-  "description": "A brief overview of ${topic}",
+  "description": "A tailored overview of ${topic} for ${role}s, written in a style that resonates with their professional background",
   "firstPrinciples": ["principle1", "principle2", "principle3"],
   "modules": [
     {
       "title": "Module 1",
-      "description": "Description of module 1",
-      "projectDeliverable": "A practical project",
-      "feynmanExplanation": "Simple explanation of key concepts",
+      "description": "Description using terminology and concepts familiar to ${role}s",
+      "projectDeliverable": "A practical project relevant to ${role}s",
+      "feynmanExplanation": "Simple explanation using analogies and examples relevant to ${role}s' experience",
       "resources": ["resource1", "resource2"]
     }
   ]
 }
 
-Return ONLY the JSON object, no other text.`;
+Use language, analogies, and examples that would resonate with a ${role}'s background and experience. Return ONLY the JSON object, no other text.`;
 
-    // 4. Make Claude API request
+    // 4. Make Claude API request with timeout
     console.log('Requesting Claude API...');
-    const message = await anthropic.messages.create({
-      model: 'claude-3-opus-20240229',
-      max_tokens: 1000,
-      messages: [{ role: 'user', content: prompt }],
-    });
+    let message;
+    try {
+      message = await Promise.race([
+        anthropic.messages.create({
+          model: 'claude-3-opus-20240229',
+          max_tokens: 1000,
+          messages: [{ role: 'user', content: prompt }],
+        }),
+        timeoutPromise
+      ]);
+    } catch (apiError) {
+      console.error('Claude API error:', apiError);
+      return res.status(500).json({
+        message: 'Error calling Claude API',
+        error: apiError instanceof Error ? apiError.message : 'Unknown API error'
+      });
+    }
+
+    if (!message?.content?.[0]?.text) {
+      console.error('Invalid Claude API response structure:', message);
+      return res.status(500).json({ message: 'Invalid API response structure' });
+    }
 
     const responseText = message.content[0].text;
-    console.log('Claude response received');
+    console.log('Claude response received:', responseText);
 
     // 5. Parse and validate response
     try {
-      const learningPathData = JSON.parse(responseText);
+      // Clean the response text by removing any potential markdown formatting
+      const cleanedResponse = responseText.replace(/```json\n?|\n?```/g, '').trim();
+      const learningPathData = JSON.parse(cleanedResponse);
       
-      // Basic validation of required fields
-      if (!learningPathData.title || !learningPathData.modules) {
-        throw new Error('Invalid response structure');
+      // Add more robust validation
+      if (!learningPathData || typeof learningPathData !== 'object') {
+        throw new Error('Invalid response format');
+      }
+
+      const requiredFields = ['title', 'description', 'firstPrinciples', 'modules'];
+      for (const field of requiredFields) {
+        if (!(field in learningPathData)) {
+          throw new Error(`Missing required field: ${field}`);
+        }
       }
 
       // 6. Save to database
