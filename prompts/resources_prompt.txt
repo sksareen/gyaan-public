@@ -1,0 +1,11 @@
+Please suggest 5 high-quality learning resources for the following topic:
+Topic: {topic}
+
+For each resource, provide:
+1. The title or name
+2. A direct URL
+3. A brief description (1-2 sentences)
+4. The difficulty level
+5. The format (video, text, interactive, etc.)
+
+Format each resource on a new line with clear separation and markdown formatting.

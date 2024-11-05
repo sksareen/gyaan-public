@@ -1,0 +1,2 @@
+"role": "user",
+"content": f"Topic: {topic}\nCurrent Proficiency: {proficiency}\n\nPlease generate 3 possible learning goals that are:\n1. Specific and measurable\n2. Aligned with the user's current proficiency level\n3. Progressive in difficulty\n4. Relevant to the topic and the user's goals\n5 Concise under 20 words\nFormat your response as a clear, numbered list of goals."

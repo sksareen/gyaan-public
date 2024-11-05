@@ -1,0 +1,15 @@
+{
+  "cursorRules": {
+    "indentOnEnter": true,
+    "indentSize": 4,
+    "indentStyle": "spaces",
+    "trimTrailingWhitespace": true,
+    "insertFinalNewline": true,
+    "bracketPairColorization": true,
+    "autoClosingBrackets": true,
+    "autoClosingQuotes": true,
+    "autoIndent": true,
+    "formatOnPaste": true,
+    "formatOnSave": true
+  }
+}
