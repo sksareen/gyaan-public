@@ -5,3 +5,5 @@ iterations.md
 .cursorignore
 
 venv/
+
+__pycache__/
