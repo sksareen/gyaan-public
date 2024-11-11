@@ -1,8 +1,10 @@
 :root {
     --primary-color: #4a90e2;
+    --primary-color-dark: #0259b0;
     --secondary-color: #2c3e50;
     --background-color: #f5f6fa;
     --text-color: #2c3e50;
+    --text-color-light: #fff;
     --border-color: #dcdde1;
 }
 
@@ -119,23 +121,32 @@ select:focus {
     padding: 1rem;
     margin: 0 auto 1rem auto;
     border: 2px solid var(--border-color);
-    border-radius: 5px;
+    border-radius: 15px;
     background-color: white;
     color: var(--text-color);
     cursor: pointer;
     transition: all 0.3s ease;
     text-align: center;
     font-size: 1rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
 }
 
 .goal-button:hover {
     border-color: var(--primary-color);
-    background-color: rgba(74, 144, 226, 0.05);
+    color: var(--text-color-light);
+    background-color: var(--primary-color-dark);
+    transition: all 0.3s ease;
 }
 
 .goal-button.selected {
     border-color: var(--primary-color);
     background-color: rgba(74, 144, 226, 0.1);
+}
+
+.goal-button.selected:hover {
+    background-color: var(--primary-color-dark);
+    transform: translateY(-2px);
 }
 
 .primary-btn[disabled] {
@@ -221,31 +232,6 @@ select:focus {
     display: none;
 }
 
-.goal-button {
-    display: block;
-    width: 100%;
-    padding: 1rem;
-    margin: 0.5rem auto;
-    text-align: center;
-    background-color: #f8f9fa;
-    border: 2px solid #dee2e6;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
-
-.goal-button:hover {
-    background-color: #e9ecef;
-    transform: translateY(-2px);
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-
-.goal-button.selected {
-    background-color: #e3f2fd;
-    border-color: #2196f3;
-    color: #1976d2;
-}
-
 #goals-list {
     margin: 2rem 0;
 }
@@ -308,18 +294,4 @@ select:focus {
 #goals-loading-text.loading-text {
     position: relative;
     z-index: 10;
-}
-
-.resources-header {
-    margin-top: 2rem;
-    margin-bottom: 1rem;
-}
-
-.resources-list {
-    list-style-type: none;
-    padding-left: 0;
-}
-
-.resources-list li {
-    margin-bottom: 0.5rem;
 }

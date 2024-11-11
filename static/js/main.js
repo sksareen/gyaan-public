@@ -1,6 +1,7 @@
 // Import all modules
 import { generateGoals } from './modules/goals.js';
 import { generateRoadmap } from './modules/roadmap.js';
+import { generateModuleContent } from './modules/learning.js';
 // import { submitFeedback, showFeedbackSection } from './modules/feedback.js';
 // import { updateProgress } from './modules/progress.js';
 
@@ -43,5 +44,29 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         });
     });
+
+    // Add event listener for Enter key on topic input
+    const topicInput = document.getElementById('topic');
+    if (topicInput) {
+        topicInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                generateGoals();
+            }
+        });
+    
+    // Scroll to the goals section
+    document.getElementById('goals-section').scrollIntoView({
+        behavior: 'smooth',
+        block: 'start'
+    });
+        
+    }
+
+    // Initialize module content button
+    const moduleContentButton = document.getElementById('confirm-roadmap-btn');
+    if (moduleContentButton) {
+        moduleContentButton.addEventListener('click', generateModuleContent);
+    }
 
 });

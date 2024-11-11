@@ -1,1 +1,30 @@
-"content": f"Topic: {topic}\nSelected Goals: {goals_text}\nCurrent Proficiency: {proficiency}\n\nPlease generate a detailed learning roadmap that includes:\n1. Clear milestones and progression steps\n2. Estimated time commitments for each stage\n3. Key concepts and skills to master\n4. Practical exercises and projects\n5. Checkpoints for progress assessment\n\nFormat your response using markdown with clear sections and bullet points."
+"content": f"Context:\n- Topic: {topic}\n- Selected Goals: {goals_text}\n- Current Proficiency: {proficiency}\n- \n\nCreate a comprehensive learning roadmap that includes:\n\n1. Learning Path Structure:\n   - Clear progression stages\n   - Dependencies between concepts\n   - Estimated time per stage\n   - Milestone checkpoints\n\n2. For Each Stage:\n   - Learning objectives\n   - Core concepts to master\n   - Practical exercises\n   - Projects/assignments\n   - Assessment criteria\n   - Resources needed\n\n3. Progress Tracking:\n   - Knowledge checkpoints\n   - Skill assessments\n   - Project evaluations\n   - Feedback mechanisms\n\nFormat the roadmap in markdown with clear headers, nested lists, and progress indicators."
+
+Context:
+- Topic: {topic}
+- Selected Goals: {goals_text}
+- Current Proficiency: {proficiency}
+
+Create a comprehensive learning roadmap that includes:
+
+1. Learning Path Structure:
+   - Clear progression stages
+   - Dependencies between concepts
+   - Estimated time per stage
+   - Milestone checkpoints
+
+2. For Each Stage:
+   - Learning objectives
+   - Core concepts to master
+   - Practical exercises
+   - Projects/assignments
+   - Assessment criteria
+   - Resources needed
+
+3. Progress Tracking:
+   - Knowledge checkpoints
+   - Skill assessments
+   - Project evaluations
+   - Feedback mechanisms
+
+Format the roadmap in markdown with clear headers, nested lists, and progress indicators.

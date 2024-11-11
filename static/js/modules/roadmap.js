@@ -3,6 +3,9 @@ import { setLoading } from './loading.js';
 import { updateProgress } from './progress.js';
 import { state } from '../main.js';
 
+// Declare totalSections at the top of the file
+let totalSections = 0;
+
 // Function to generate a learning roadmap based on selected goals
 async function generateRoadmap() {
     // Check if user has selected any goals, show alert if not
@@ -11,20 +14,16 @@ async function generateRoadmap() {
         return;
     }
     
-    const loadingElement = document.getElementById('loading-roadmap');
-    if (!loadingElement) {
-        console.warn('Loading element not found, continuing without loading indicator');
-    }
-    
-    // Show loading spinner while generating roadmap (only if element exists)
-    if (loadingElement) {
-        setLoading(true, 'roadmap');
-    }
+    // Always call setLoading - it handles missing elements gracefully
+    setLoading(true, 'roadmap');
     
     try {
         // Log selected goals for debugging
         console.log('Generating roadmap for goals:', state.selectedGoals);
         
+        const topic = document.getElementById('topic').value;
+        const proficiency = document.getElementById('proficiency').value;
+
         // Send request to backend to generate roadmap
         const response = await fetch('/generate_roadmap', {
             method: 'POST',
@@ -73,21 +72,27 @@ async function generateRoadmap() {
         document.getElementById('roadmap-section').classList.remove('hidden');
         displayRoadmap(data);
         
+        // After successfully generating the roadmap and displaying it:
+        document.getElementById('roadmap-section').classList.remove('hidden');
+        document.getElementById('first-module-section').classList.remove('hidden'); // Show the section with the confirm button
+        
+        // Enable and show the confirm button
+        const confirmButton = document.getElementById('confirm-roadmap-btn');
+        confirmButton.classList.remove('hidden');
+        confirmButton.disabled = false;
+
     } catch (error) {
         // Show user-friendly error message if something goes wrong
         console.error('Error:', error);
         alert(`Error generating roadmap: ${error.message}. Please try again.`);
     } finally {
-        // Hide loading spinner when done (only if element exists)
-        if (loadingElement) {
-            setLoading(false, 'roadmap');
-        }
+        // Always call setLoading false - it handles missing elements gracefully
+        setLoading(false, 'roadmap');
     }
 }
 
 // Function to display the generated roadmap on the page
 function displayRoadmap(data) {
-    let totalSections = 0;
     const roadmapContent = document.getElementById('roadmap-content');
     const resourceList = document.getElementById('resource-list');
     
@@ -96,29 +101,15 @@ function displayRoadmap(data) {
         return;
     }
 
-    // Simple markdown converter function
-    function convertMarkdown(text) {
-        return text
-            // Convert headers (### Header)
-            .replace(/### (.*$)/gm, '<h3>$1</h3>')
-            .replace(/## (.*$)/gm, '<h2>$1</h2>')
-            .replace(/# (.*$)/gm, '<h1>$1</h1>')
-            // Convert bold (**text**)
-            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-            // Convert italic (*text*)
-            .replace(/\*(.*?)\*/g, '<em>$1</em>')
-            // Convert bullet points
-            .replace(/^\s*[-*+]\s+(.*$)/gm, '<li>$1</li>')
-            // Convert numbered lists
-            .replace(/^\s*\d+\.\s+(.*$)/gm, '<li>$1</li>')
-            // Convert paragraphs
-            .split('\n\n').map(para => `<p>${para}</p>`).join('\n');
-    }
-
-    // Use the custom markdown converter instead of marked
-    const formattedRoadmap = convertMarkdown(data.roadmap);
+    // Update marked.js usage to work with version 15.0.0
+    const formattedRoadmap = marked.parse(data.roadmap, {
+        breaks: true,        // Enable line breaks
+        gfm: true,          // Enable GitHub Flavored Markdown
+        headerIds: true,    // Enable header IDs
+        mangle: false,      // Disable mangling
+        sanitize: false     // Disable sanitization (be careful with user input)
+    });
     
-    // Rest of the function remains the same
     roadmapContent.innerHTML = `
         <div class="roadmap-text">
             ${formattedRoadmap}
@@ -139,10 +130,16 @@ function displayRoadmap(data) {
         resourcesList.appendChild(li);
     });
     
-    // Set up progress tracking by counting roadmap sections
+    // Calculate total sections based on the roadmap content
     const sections = data.roadmap.split('\n\n').filter(section => section.trim());
-    totalSections = sections.length;
+    state.totalSections = sections.length;
     updateProgress(0);
+
+    // Scroll to the roadmap section
+    document.getElementById('roadmap-section').scrollIntoView({
+        behavior: 'smooth',
+        block: 'start'
+    });
 }
 
 export { generateRoadmap, displayRoadmap };

@@ -146,6 +146,7 @@ function updateSelectedGoals() {
     }
     
     console.log('Selected goals:', state.selectedGoals);
+
 }
 
 export { generateGoals, displayGoals, updateSelectedGoals };

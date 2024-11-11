@@ -1,0 +1,16 @@
+{
+    "conceptFoundations": {
+        "role": "user",
+        "content": "Topic: {topic}\nProficiency: {proficiency}\nGoals: {goals}\n\nProvide fundamental concept breakdown:\n1. Core principles and mental models\n2. Key terminology and definitions\n3. Concept relationships and dependencies\n4. Common misconceptions\n5. Real-world analogies\n6. Visual representations\n\nFormat with clear headers, diagrams, and examples."
+    },
+    
+    "practicalApplication": {
+        "role": "user",
+        "content": "Topic: {topic}\nProficiency: {proficiency}\nGoals: {goals}\n\nCreate practical learning materials:\n1. Step-by-step tutorials\n2. Code examples and explanations\n3. Best practices and patterns\n4. Common pitfalls and solutions\n5. Industry applications\n\nInclude working examples and code snippets."
+    },
+    
+    "skillAssessment": {
+        "role": "user",
+        "content": "Topic: {topic}\nProficiency: {proficiency}\nGoals: {goals}\n\nDesign comprehensive assessment:\n1. Knowledge check questions\n2. Practical exercises\n3. Project specifications\n4. Evaluation criteria\n5. Progress metrics\n6. Extension challenges\n\nProvide complete solutions and explanations."
+    }
+}

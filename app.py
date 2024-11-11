@@ -1,14 +1,17 @@
 from flask import Flask, render_template, request, jsonify
+from exa_py import Exa
 import anthropic
 import os
 from dotenv import load_dotenv
-import requests
+# import requests
 from datetime import datetime
 
+# Move load_dotenv() to the top, before any env var access
 load_dotenv()
 
 app = Flask(__name__)
 client = anthropic.Anthropic(api_key=os.getenv('ANTHROPIC_API_KEY'))
+exa = Exa(api_key=os.getenv('EXA_API_KEY'))
 
 # Load prompts from files
 def load_prompt(filename):
@@ -16,16 +19,22 @@ def load_prompt(filename):
         return file.read().strip()
 
 SYSTEM_PROMPT = load_prompt('system_prompt.txt')
+ROADMAP_PROMPT = load_prompt('roadmap_prompt.txt')
+RESOURCES_PROMPT = load_prompt('resources_prompt.txt')
+GOALS_PROMPT = load_prompt('goals_prompt.txt')
+MODULE_CONTENT_PROMPT = load_prompt('module_content_prompt.txt')
+
+HAIKU_MODEL = "claude-3-haiku-20240307"
+SONNET_MODEL = "claude-3-5-sonnet-20241022"
 
 # Add near the top of your file
-DUMMY_MODE = True
+DUMMY_MODE = False
 
 DUMMY_RESPONSES = {
-    "goals": """1. Master Python syntax and basic programming concepts
+    "goals": """learn how to:
 2. Learn object-oriented programming principles
 3. Build simple command-line applications
-4. Understand web development basics with Python
-5. Practice with real-world coding exercises""",
+4. Understand web development basics with Python""",
     
     "roadmap": """## Week 1-2: Fundamentals
 - Python installation and setup
@@ -48,7 +57,61 @@ DUMMY_RESPONSES = {
         {"title": "W3Schools", "url": "https://www.w3schools.com/python"},
         {"title": "Codecademy", "url": "https://www.codecademy.com/learn/learn-python"},
         {"title": "Python Crash Course", "url": "https://nostarch.com/pythoncrashcourse2e"}
-    ]
+    ],
+
+    "module": {
+        "firstPrinciples": """## Core Programming Concepts
+
+1. **Variables and Memory**
+   - Think of variables as labeled containers that store data
+   - The computer allocates memory space to hold different types of data
+   - Understanding this helps visualize how programs manage information
+
+2. **Control Flow**
+   - Programs execute instructions in sequence
+   - Decisions (if/else) and loops allow us to control this flow
+   - This creates the logical structure of our programs
+
+3. **Functions and Modularity** 
+   - Functions are reusable blocks of code that perform specific tasks
+   - They help break down complex problems into smaller, manageable pieces
+   - This is fundamental to writing clean, maintainable code""",
+
+        "keyInformation": """## Python Basics
+
+- Python is an interpreted, high-level programming language
+- Known for its simple, readable syntax
+- Extensive standard library and third-party packages
+- Popular for web development, data science, and automation
+
+### Key Concepts to Master:
+1. Variables and data types (int, str, list, etc.)
+2. Basic operators (+, -, *, /, etc.)
+3. Control structures (if/else, while, for)
+4. Function definition and calling
+5. Basic input/output operations""",
+
+        "practiceExercise": """## Practice Exercise: Temperature Converter
+
+Create a simple program that converts temperatures between Celsius and Fahrenheit.
+
+1. Create a function called `celsius_to_fahrenheit` that:
+   - Takes a Celsius temperature as input
+   - Returns the equivalent Fahrenheit temperature
+   - Formula: F = (C × 9/5) + 32
+
+2. Create a function called `fahrenheit_to_celsius` that:
+   - Takes a Fahrenheit temperature as input
+   - Returns the equivalent Celsius temperature
+   - Formula: C = (F - 32) × 5/9
+
+3. Test your functions with these values:
+   - 0°C to Fahrenheit (should be 32°F)
+   - 100°C to Fahrenheit (should be 212°F)
+   - 98.6°F to Celsius (should be 37°C)
+
+Bonus: Add input validation and round results to 1 decimal place."""
+    }
 }
 
 @app.route('/')
@@ -78,14 +141,13 @@ def generate_goals():
         if not topic or not proficiency:
             return jsonify({"error": "Missing required fields: topic and proficiency"}), 400
         
-        goals_prompt = load_prompt('goals_prompt.txt')
         message = client.messages.create(
-            model="claude-3-haiku-20240307",
+            model=HAIKU_MODEL,
             max_tokens=1000,
             system=SYSTEM_PROMPT,
             messages=[{
                 "role": "user", 
-                "content": goals_prompt.format(topic=topic, proficiency=proficiency)
+                "content": GOALS_PROMPT.format(topic=topic, proficiency=proficiency)
             }]
         )
         
@@ -123,18 +185,14 @@ def generate_roadmap():
         
         print(f"Generating roadmap for topic: {topic}, goals: {goals_text}")
         
-        system_prompt = load_prompt('system_prompt.txt')
-        roadmap_prompt = load_prompt('roadmap_prompt.txt')
-        resources_prompt = load_prompt('resources_prompt.txt')
-        
         # Generate roadmap with Claude
         message = client.messages.create(
-            model="claude-3-haiku-20240307",
+            model=HAIKU_MODEL,
             max_tokens=2000,
-            system=system_prompt,
+            system=SYSTEM_PROMPT,
             messages=[{
                 "role": "user",
-                "content": roadmap_prompt.format(
+                "content": ROADMAP_PROMPT.format(
                     topic=topic,
                     goals_text=goals_text,
                     proficiency=proficiency
@@ -144,30 +202,23 @@ def generate_roadmap():
         
         print("Roadmap generated, fetching resources...")
         
-        # Get relevant resources from Claude
-        resources_message = client.messages.create(
-            model="claude-3-haiku-20240307",
-            max_tokens=1000,
-            system=resources_prompt,
-            messages=[{
-                "role": "user",
-                "content": f"Please suggest 5 high-quality learning resources with URLs for learning about: {topic}"
-            }]
+        # Get relevant resources from ExaAI
+        search_response = exa.search_and_contents(
+            query=f"best learning resources and tutorials for {topic}",
+            num_results=5,
+            use_autoprompt=True
         )
         
-        # Parse resources response into a list of dictionaries
-        resources_text = str(resources_message.content)  # Convert content to string
-        resources_lines = [line for line in resources_text.split('\n') if line.strip()]
+        # Access the results from 'search_response'
         resources = []
-        for i, line in enumerate(resources_lines[:5]):
-            if line.strip():
-                resources.append({
-                    "title": f"Resource {i+1}",
-                    "url": line.strip()
-                })
+        for i, result in enumerate(search_response.results):
+            resources.append({
+                "title": result.title if result.title else f"Resource {i+1}",
+                "url": result.url if result.url else ''
+            })
         
         response_data = {
-            "roadmap": str(message.content),  # Also ensure roadmap content is string
+            "roadmap": str(message.content),  # Ensure roadmap content is a string
             "resources": resources
         }
         
@@ -176,6 +227,87 @@ def generate_roadmap():
     except Exception as e:
         print("Error in generate_roadmap:", str(e))  # Debug print
         return jsonify({'error': str(e)}), 500
+
+
+@app.route('/generate_module_content', methods=['POST'])
+def generate_module_content():
+    if DUMMY_MODE:
+        return jsonify(DUMMY_RESPONSES["module"])
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({'error': 'No data provided'}), 400
+            
+        topic = data.get('topic')
+        proficiency = data.get('proficiency')
+        goals = data.get('goals', [])
+
+        if not all([topic, proficiency, goals]):
+            return jsonify({'error': 'Missing required fields'}), 400
+
+        # Format goals into string
+        goals_text = "\n".join([f"- {goal}" for goal in goals])
+
+        # Generate first principles content
+        first_principles_message = client.messages.create(
+            model=HAIKU_MODEL,
+            max_tokens=1000,
+            system=SYSTEM_PROMPT,
+            messages=[{
+                "role": "user",
+                "content": f"""Generate first principles content for learning {topic}.
+                Proficiency level: {proficiency}
+                Learning goals:
+                {goals_text}"""
+            }]
+        )
+
+        # Generate key information content
+        key_info_message = client.messages.create(
+            model=HAIKU_MODEL, 
+            max_tokens=1000,
+            system=SYSTEM_PROMPT,
+            messages=[{
+                "role": "user",
+                "content": f"""Generate key information and concepts for learning {topic}.
+                Proficiency level: {proficiency}
+                Learning goals:
+                {goals_text}"""
+            }]
+        )
+
+        # Generate practice exercise
+        practice_message = client.messages.create(
+            model=HAIKU_MODEL,
+            max_tokens=1000,
+            system=SYSTEM_PROMPT,
+            messages=[{
+                "role": "user",
+                "content": f"""Generate a practice exercise for learning {topic}.
+                Proficiency level: {proficiency}
+                Learning goals:
+                {goals_text}"""
+            }]
+        )
+
+        response_data = {
+            "firstPrinciples": str(first_principles_message.content),
+            "keyInformation": str(key_info_message.content),
+            "practiceExercise": str(practice_message.content)
+        }
+
+        return jsonify(response_data)
+
+    except Exception as e:
+        print(f"Error generating module content: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
+
+@app.after_request
+def add_header(response):
+    if 'Cache-Control' not in response.headers:
+        response.headers['Cache-Control'] = 'no-store'
+    return response
 
 if __name__ == '__main__':
     app.run(debug=True, port=5001)

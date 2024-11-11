@@ -3,30 +3,38 @@ function setLoading(isLoading, type = 'goals') {
     const loader = document.getElementById(`${type}-loader`);
     const loadingText = document.getElementById(`${type}-loading-text`);
     
-    if (!button || !loader || !loadingText) {
-        console.error(`Loading elements not found for type '${type}':`);
-        console.error('Button:', button);
-        console.error('Loader:', loader);
-        console.error('Loading text:', loadingText);
-        return;
+    // Debug log
+    console.log(`Setting loading state for ${type}:`, { isLoading });
+    
+    // Handle button
+    if (button) {
+        if (isLoading) {
+            button.classList.add('loading');
+            button.disabled = true;
+        } else {
+            button.classList.remove('loading');
+            button.disabled = false;
+        }
+    } else {
+        console.warn(`Button not found for type '${type}'`);
     }
     
-    if (isLoading) {
-        button.classList.add('loading');
-        button.disabled = true;
-        loader.style.display = 'block';
-        loadingText.style.display = 'block';
-        
-        // Debug log
-        console.log(`Loading state activated for ${type}`);
+    // Handle loader
+    if (loader) {
+        loader.style.display = isLoading ? 'block' : 'none';
     } else {
-        button.classList.remove('loading');
-        button.disabled = false;
-        loader.style.display = 'none';
-        loadingText.style.display = 'none';
-        
-        // Debug log
-        console.log(`Loading state deactivated for ${type}`);
+        console.warn(`Loader not found for type '${type}'`);
     }
+    
+    // Handle loading text
+    if (loadingText) {
+        loadingText.style.display = isLoading ? 'block' : 'none';
+    } else {
+        console.warn(`Loading text not found for type '${type}'`);
+    }
+    
+    // Debug log
+    console.log(`Loading state ${isLoading ? 'activated' : 'deactivated'} for ${type}`);
 }
+
 export { setLoading };

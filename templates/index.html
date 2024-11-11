@@ -6,12 +6,13 @@
     <title>Learning from First Principles</title>
     <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
     <link rel="stylesheet" href="/static/css/style.css">
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    <script src="https://unpkg.com/marked@11.2.0/marked.min.js"></script>
+    <!-- <script src="https://unpkg.com/marked@9.0.0/marked.min.js"></script> -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/15.0.0/marked.min.js"></script>
+
 </head>
 <body>
     <div class="container">
-        <h1>Learn from First Principles</h1>
+        <h1 class="title">Learn from First Principles</h1>
         
         <div class="input-section">
             <div class="form-group">
@@ -28,32 +29,53 @@
                 </select>
             </div>
             
-            <button id="generate-goals-btn">Generate Goals</button>
+            <button id="generate-goals-btn" class="primary-btn">Generate Goals</button>
             <div class="loader" id="goals-loader"></div>
             <div class="loading-text" id="goals-loading-text">Generating learning goals...</div>
         </div>
 
         <div id="goals-section" class="hidden">
-            <h2>Learning Goals</h2>
+            <h1>Learning Goals</h1>
             <div id="goals-list"></div>
             <div class="roadmap-controls">
                 <button id="generate-roadmap-btn" class="primary-btn" disabled>
                     Create Learning Roadmap
                 </button>
-                <div id="loading-roadmap" class="loading-spinner" style="display: none;">
-                    <!-- Your loading spinner content -->
-                </div>
+                <div class="loader" id="roadmap-loader"></div>
                 <div class="loading-text" id="roadmap-loading-text">Generating roadmap...</div>
             </div>
         </div>
         <div id="roadmap-section" class="hidden">
-            <h2>Your Learning Roadmap</h2>
+            <h1>Your Learning Roadmap</h1>
             <div class="progress-container">
                 <div class="progress" style="width: 0%"></div>
                 <span id="progress-percentage">0%</span>
             </div>
             <div id="roadmap-content"></div>
             <div id="resource-list"></div>
+        </div>
+
+        <div id="first-module-section" class="hidden">
+            <button id="confirm-roadmap-btn" class="primary-btn hidden">Confirm and Start Learning</button>
+            
+            <div id="module-content" class="hidden">
+                <h1>Module 1</h1>
+                
+                <div class="module-section">
+                    <h3>First Principles</h3>
+                    <div id="first-principles-content"></div>
+                </div>
+
+                <div class="module-section">
+                    <h3>Key Information</h3>
+                    <div id="key-info-content"></div>
+                </div>
+
+                <div class="module-section"> 
+                    <h3>Practice Exercise</h3>
+                    <div id="practice-content"></div>
+                </div>
+            </div>
         </div>
 
         <div id="feedback-section" class="hidden">

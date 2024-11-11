@@ -1,26 +1,17 @@
 import { state } from '../main.js';
 
-function updateProgress(sectionNumber) {
-    state.currentSection = sectionNumber;
-    const progressPercentage = (state.currentSection / state.totalSections) * 100;
-    
-    // Make sure roadmap section is visible first
-    const roadmapSection = document.getElementById('roadmap-section');
-    if (roadmapSection) {
-        roadmapSection.classList.remove('hidden');
-    }
-    
+function updateProgress(completedSections) {
     const progressBar = document.querySelector('.progress');
-    const progressText = document.getElementById('progress-percentage');
-    
-    // Check if elements exist before updating them
-    if (!progressBar || !progressText) {
-        console.warn('Progress elements not found');
-        return;
+    const progressPercentage = document.getElementById('progress-percentage');
+
+    if (state.totalSections && state.totalSections > 0) {
+        const progress = (completedSections / state.totalSections) * 100;
+        progressBar.style.width = `${progress}%`;
+        progressPercentage.textContent = `${Math.round(progress)}%`;
+    } else {
+        progressBar.style.width = '0%';
+        progressPercentage.textContent = '0%';
     }
-    
-    progressBar.style.width = `${progressPercentage}%`;
-    progressText.textContent = `${Math.round(progressPercentage)}%`;
 }
 
 export { updateProgress };
