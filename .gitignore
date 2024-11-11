@@ -1,4 +1,7 @@
 .env
 iterations.md
+
 .cursorrules
 .cursorignore
+
+venv/
