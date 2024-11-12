@@ -10,9 +10,19 @@
 
 # Python
 **/venv/
+backend/venv/
 **/__pycache__/
 *.py[cod]
 *.so
 
 iterations.md
 .cursorrules
+
+# Python virtual environments
+venv/
+*/venv/
+**/venv/
+.venv
+env/
+.env/
+ENV/
