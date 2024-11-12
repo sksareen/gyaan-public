@@ -1,0 +1,22 @@
+Topic: {topic}
+Proficiency Level: {proficiency}
+Learning Goals: {goals}
+
+Provide 5 high-quality learning resources that:
+1. Align with the specified learning goals
+2. Match the learner's proficiency level
+3. Offer diverse learning approaches
+4. Include practical applications
+5. Come from reputable sources
+
+For each resource, specify:
+1. Title/Name
+2. Source URL
+3. Format (video/text/interactive)
+4. Difficulty level (beginner/intermediate/advanced)
+5. Time commitment
+6. Key learning outcomes
+7. Prerequisites (if any)
+8. Cost (free/paid)
+
+Format each resource in markdown with clear sections and proper linking.

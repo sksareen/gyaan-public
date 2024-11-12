@@ -1,0 +1,11 @@
+Topic: {topic}
+Current Proficiency: {proficiency}
+
+Please generate 3 possible learning goals that are:
+1. Specific and measurable
+2. Aligned with the user's current proficiency level
+3. Progressive in difficulty
+4. Relevant to the topic and the user's goals
+5. Concise under 20 words
+
+Format your response as a clear, numbered list of goals.

@@ -1,0 +1,28 @@
+Context:
+- Topic: {topic}
+- Selected Goals: {goals_text}
+- Current Proficiency: {proficiency}
+
+Create a comprehensive learning roadmap that includes:
+
+1. Learning Path Structure:
+   - Clear progression stages
+   - Dependencies between concepts
+   - Estimated time per stage
+   - Milestone checkpoints
+
+2. For Each Stage:
+   - Learning objectives
+   - Core concepts to master
+   - Practical exercises
+   - Projects/assignments
+   - Assessment criteria
+   - Resources needed
+
+3. Progress Tracking:
+   - Knowledge checkpoints
+   - Skill assessments
+   - Project evaluations
+   - Feedback mechanisms
+
+Format the roadmap in markdown with clear headers, nested lists, and progress indicators.

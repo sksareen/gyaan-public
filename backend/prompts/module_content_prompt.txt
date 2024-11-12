@@ -1,0 +1,43 @@
+# Concept Foundations
+Topic: {topic}
+Proficiency: {proficiency}
+Goals: {goals}
+
+Provide fundamental concept breakdown:
+1. Core principles and mental models
+2. Key terminology and definitions
+3. Concept relationships and dependencies
+4. Common misconceptions
+5. Real-world analogies
+6. Visual representations
+
+Format with clear headers, diagrams, and examples.
+
+# Practical Application
+Topic: {topic}
+Proficiency: {proficiency}
+Goals: {goals}
+
+Create practical learning materials:
+1. Step-by-step tutorials
+2. Code examples and explanations
+3. Best practices and patterns
+4. Common pitfalls and solutions
+5. Industry applications
+
+Include working examples and code snippets.
+
+# Skill Assessment
+Topic: {topic}
+Proficiency: {proficiency}
+Goals: {goals}
+
+Design comprehensive assessment:
+1. Knowledge check questions
+2. Practical exercises
+3. Project specifications
+4. Evaluation criteria
+5. Progress metrics
+6. Extension challenges
+
+Provide complete solutions and explanations.
