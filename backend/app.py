@@ -4,36 +4,111 @@ from exa_py import Exa
 import anthropic
 import os
 from dotenv import load_dotenv
-# import requests
 from datetime import datetime
 import json
+import logging
+from functools import wraps
+import time
+from utils import validate_request, parse_goals, parse_markdown_content
 
-# Move load_dotenv() to the top, before any env var access
+# Configure logging
+logging.basicConfig(
+    level=logging.DEBUG,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
+
+# Load environment variables
 load_dotenv()
 
+# Validate required environment variables
+required_env_vars = ['ANTHROPIC_API_KEY', 'EXA_API_KEY']
+missing_vars = [var for var in required_env_vars if not os.getenv(var)]
+if missing_vars:
+    raise EnvironmentError(f"Missing required environment variables: {', '.join(missing_vars)}")
+
+# Initialize Flask app
 app = Flask(__name__)
-CORS(app)  # Enable CORS for all routes
-client = anthropic.Anthropic(api_key=os.getenv('ANTHROPIC_API_KEY'))
-exa = Exa(api_key=os.getenv('EXA_API_KEY'))
+CORS(app)
 
-# Load prompts from files
-def load_prompt(filename):
-    print('[app.py] load_prompt starting')
-    with open(os.path.join('prompts', filename), 'r') as file:
-        return file.read().strip()
+# Initialize API clients
+try:
+    client = anthropic.Anthropic(api_key=os.getenv('ANTHROPIC_API_KEY'))
+    exa = Exa(api_key=os.getenv('EXA_API_KEY'))
+except Exception as e:
+    logger.error(f"Error initializing API clients: {str(e)}")
+    raise
 
-SYSTEM_PROMPT = load_prompt('system_prompt.txt')
-ROADMAP_PROMPT = load_prompt('roadmap_prompt.txt')
-RESOURCES_PROMPT = load_prompt('resources_prompt.txt')
-GOALS_PROMPT = load_prompt('goals_prompt.txt')
-MODULE_CONTENT_PROMPT = load_prompt('module_content_prompt.txt')
-
+# Constants
 HAIKU_MODEL = "claude-3-haiku-20240307"
 SONNET_MODEL = "claude-3-5-sonnet-20241022"
+MAX_RETRIES = 3
+REQUEST_TIMEOUT = 30
 
-# Add near the top of your file
+SYSTEM_PROMPT = """You are an expert tutor helping create personalized learning plans."""
+
+GOALS_PROMPT = """Create 3-5 specific learning goals for {topic} at a {proficiency} level.
+Format each goal as a clear, actionable statement.
+Return only the numbered goals, one per line."""
+
+ROADMAP_PROMPT = """Create a learning roadmap for {topic} at a {proficiency} level.
+Goals:
+{goals_text}
+
+Format the response as a markdown document with clear sections and bullet points."""
+
+class PromptManager:
+    _prompts = {}
+    
+    @classmethod
+    def load_prompt(cls, name):
+        """Load a prompt from file with caching"""
+        if name not in cls._prompts:
+            try:
+                with open(os.path.join('prompts', f'{name}_prompt.txt'), 'r') as file:
+                    cls._prompts[name] = file.read().strip()
+            except FileNotFoundError:
+                logger.error(f"Prompt file not found: {name}_prompt.txt")
+                raise
+        return cls._prompts[name]
+    
+    @classmethod
+    def get_prompt(cls, name, **kwargs):
+        """Get a formatted prompt"""
+        prompt = cls.load_prompt(name)
+        try:
+            return prompt.format(**kwargs)
+        except KeyError as e:
+            logger.error(f"Missing prompt parameter: {str(e)}")
+            raise ValueError(f"Missing required parameter for {name} prompt: {str(e)}")
+
+# Load all prompts
+prompts = PromptManager()
+
+# Error handling decorator for AI requests
+def handle_ai_request(retries=MAX_RETRIES):
+    def decorator(f):
+        @wraps(f)
+        def decorated_function(*args, **kwargs):
+            last_error = None
+            for attempt in range(retries):
+                try:
+                    return f(*args, **kwargs)
+                except anthropic.RateLimitError as e:
+                    logger.warning(f"Rate limit hit, attempt {attempt + 1}/{retries}")
+                    time.sleep(2 ** attempt)  # Exponential backoff
+                    last_error = e
+                except Exception as e:
+                    logger.error(f"Error in AI request: {str(e)}")
+                    raise
+            raise last_error
+        return decorated_function
+    return decorator
+
+# Dummy mode for testing
 DUMMY_MODE = False
 
+# Test responses
 DUMMY_RESPONSES = {
     "goals": """learn how to:
 2. Learn object-oriented programming principles
@@ -149,61 +224,124 @@ def handle_error(error):
     return jsonify(error=str(error)), 500
 
 @app.route('/generate_goals', methods=['POST'])
+@validate_request(['topic', 'proficiency'])
+@handle_ai_request()
 def generate_goals():
-    print('[app.py] generate_goals starting')
+    """Generate learning goals based on topic and proficiency"""
+    logger.info("Generating goals")
+    
+    if DUMMY_MODE:
+        return jsonify({"goals": DUMMY_RESPONSES["goals"]})
+        
+    data = request.get_json()
+    topic = data['topic']
+    proficiency = data['proficiency']
+    
+    logger.debug(f"Generating goals for topic: {topic}, proficiency: {proficiency}")
+    
+    # Generate goals using Claude
     try:
-        if not request.is_json:
-            print('Request is not JSON')
-            return jsonify({"error": "Content-Type must be application/json"}), 400
-        
-        topic = request.json.get('topic')
-        proficiency = request.json.get('proficiency')
-        
-        print(f'Received request - Topic: {topic}, Proficiency: {proficiency}')
-        
-        if not topic or not proficiency:
-            print('Missing required fields')
-            return jsonify({"error": "Missing required fields: topic and proficiency"}), 400
+        prompt = prompts.get_prompt('goals', topic=topic, proficiency=proficiency)
+        message = client.messages.create(
+            model=HAIKU_MODEL,
+            max_tokens=1000,
+            system=prompts.get_prompt('system'),
+            messages=[{
+                "role": "user", 
+                "content": prompt
+            }]
+        )
         
         # Get response from Claude
         try:
+            prompt = GOALS_PROMPT.format(topic=topic, proficiency=proficiency)
+            print(f'[DEBUG] Using prompt: {prompt}')
+            
             message = client.messages.create(
                 model=HAIKU_MODEL,
                 max_tokens=1000,
                 system=SYSTEM_PROMPT,
                 messages=[{
                     "role": "user", 
-                    "content": GOALS_PROMPT.format(topic=topic, proficiency=proficiency)
+                    "content": prompt
                 }]
             )
-            print("Claude response received:", message.content)
+            print("[DEBUG] Raw Claude response:", message.content)
         except Exception as e:
             print(f"Error calling Claude API: {str(e)}")
             return jsonify({"error": "Failed to generate goals from AI"}), 500
-        
+
         # Parse the response content
         goals_text = str(message.content)
-        print("Raw goals text:", goals_text)
+        print("[DEBUG] Initial goals text:", goals_text)
+        
+        def extract_goals(text):
+            # Remove any markdown headers
+            lines = text.split('\n')
+            content_lines = []
+            for line in lines:
+                line = line.strip()
+                # Skip empty lines and headers
+                if not line or line.startswith('#'):
+                    continue
+                # If it's a numbered or bullet point, clean it
+                cleaned_line = line.lstrip('- ').lstrip('* ').lstrip('1234567890. ')
+                if cleaned_line:
+                    content_lines.append(cleaned_line)
+            return content_lines
+
+        # Handle TextBlock format first
+        if 'TextBlock' in goals_text:
+            try:
+                import re
+                text_match = re.search(r"text='([\s\S]*?)'", goals_text, re.DOTALL)
+                if text_match:
+                    goals_text = text_match.group(1)
+                    print("[DEBUG] Extracted from TextBlock:", goals_text)
+            except Exception as e:
+                print(f"[DEBUG] Error extracting from TextBlock: {str(e)}")
         
         try:
-            # Try to parse as JSON first
+            # First try to parse as JSON
             goals_array = json.loads(goals_text)
             if isinstance(goals_array, list):
-                print("Successfully parsed JSON array:", goals_array)
-                return jsonify({"goals": goals_array})
-        except json.JSONDecodeError as e:
-            print(f"JSON parsing failed: {str(e)}")
-            # If JSON parsing fails, split by newlines and clean
-            goals_array = [
-                goal.strip().lstrip('- ').lstrip('* ').lstrip('1234567890. ')
-                for goal in goals_text.split('\n')
-                if goal.strip() and not goal.startswith('#')
-            ]
-            print("Fallback parsing result:", goals_array)
-            if goals_array:
-                return jsonify({"goals": goals_array})
-            else:
-                return jsonify({"error": "Failed to parse goals from AI response"}), 500
+                print("[DEBUG] Successfully parsed JSON array:", goals_array)
+                clean_goals = []
+                for goal in goals_array:
+                    if isinstance(goal, dict) and 'text' in goal:
+                        clean_goals.extend(extract_goals(goal['text']))
+                    else:
+                        clean_goals.extend(extract_goals(str(goal)))
+                if clean_goals:
+                    return jsonify({"goals": clean_goals})
+        except json.JSONDecodeError:
+            print("[DEBUG] Not a JSON response, trying direct text parsing")
+            
+        # If we get here, treat it as plain text
+        goals_array = extract_goals(goals_text)
+        print("[DEBUG] Extracted goals:", goals_array)
+        
+        if goals_array:
+            return jsonify({"goals": goals_array})
+        
+        # If we still have no valid goals, try one last parsing attempt
+        print("[DEBUG] Final fallback parsing attempt")
+        # Split by any obvious goal separators and clean up
+        final_attempt = []
+        for line in goals_text.split('\n'):
+            line = line.strip()
+            if line and not line.startswith('#'):
+                # Remove common list markers and numbers
+                cleaned = line.lstrip('- ').lstrip('* ').lstrip('1234567890. ')
+                if cleaned and len(cleaned) > 10:  # Assuming a valid goal has some minimum length
+                    final_attempt.append(cleaned)
+        
+        if final_attempt:
+            print("[DEBUG] Final parsed goals:", final_attempt)
+            return jsonify({"goals": final_attempt})
+            
+        print("[DEBUG] Failed to parse any valid goals")
+        return jsonify({"error": "Failed to parse goals from AI response"}), 500
 
     except Exception as e:
         print(f"Unexpected error in generate_goals: {str(e)}")
@@ -272,8 +410,20 @@ def generate_roadmap():
                 "url": result.url if result.url else ''
             })
         
+        roadmap_content = str(message.content)
+        
+        # Handle TextBlock format
+        if 'TextBlock' in roadmap_content:
+            try:
+                import re
+                text_match = re.search(r"text='(.*?)'", roadmap_content, re.DOTALL)
+                if text_match:
+                    roadmap_content = text_match.group(1)
+            except Exception as e:
+                print(f"Error extracting from TextBlock: {str(e)}")
+        
         response_data = {
-            "roadmap": str(message.content),  # Ensure roadmap content is a string
+            "roadmap": roadmap_content,  # Now cleaned from TextBlock format
             "resources": resources
         }
         
@@ -350,10 +500,22 @@ def generate_module_content():
             }]
         )
 
+        def clean_text_block(content):
+            content_str = str(content)
+            if 'TextBlock' in content_str:
+                try:
+                    import re
+                    text_match = re.search(r"text='(.*?)'", content_str, re.DOTALL)
+                    if text_match:
+                        return text_match.group(1)
+                except Exception as e:
+                    print(f"Error extracting from TextBlock: {str(e)}")
+            return content_str
+
         response_data = {
-            "firstPrinciples": str(first_principles_message.content),
-            "keyInformation": str(key_info_message.content),
-            "practiceExercise": str(practice_message.content)
+            "firstPrinciples": clean_text_block(first_principles_message.content),
+            "keyInformation": clean_text_block(key_info_message.content),
+            "practiceExercise": clean_text_block(practice_message.content)
         }
 
         return jsonify(response_data)

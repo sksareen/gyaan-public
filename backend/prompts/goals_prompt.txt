@@ -1,11 +1,18 @@
 Topic: {topic}
 Current Proficiency: {proficiency}
 
-Please generate 3 possible learning goals that are:
+Generate exactly 3 concise learning goals based on the topic and proficiency level.
+
+Requirements for each goal:
 1. Specific and measurable
 2. Aligned with the user's current proficiency level
 3. Progressive in difficulty
-4. Relevant to the topic and the user's goals
-5. Concise under 20 words
+4. Relevant to the topic
+5. Under 20 words each
 
-Format your response as a clear, numbered list of goals.
+Format your response EXACTLY like this example (replace with actual goals):
+1. Demonstrate understanding of basic Python syntax by writing a simple calculator program
+2. Create and manipulate lists and dictionaries to solve data structure problems
+3. Build a command-line application using functions and error handling
+
+DO NOT include any additional text, headers, or explanations - just the numbered list.
