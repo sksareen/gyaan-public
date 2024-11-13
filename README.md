@@ -1,125 +1,125 @@
-# Learning Path Generator (React + Flask)
+# Gyaan Learning
 
-## Introduction
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-The Learning Path Generator is a web application that helps users learn and understand complex topics by breaking them down into smaller, more manageable parts. It uses AI to generate personalized learning paths, roadmaps, and detailed content. This version features a modern React frontend with a Python Flask backend.
+## 🎯 Overview
 
-## Project Structure
+Gyaan Learning is an AI-powered education platform that generates personalized learning paths and roadmaps. By breaking down complex topics into digestible modules, it helps learners master new subjects efficiently and effectively.
+
+## ✨ Features
+
+- 🤖 AI-generated learning paths tailored to your goals
+- 📚 Detailed content and resources for each learning module
+- 📊 Progress tracking and learning analytics (coming soon)
+- 🎯 Interactive roadmap visualization (coming soon)
+- 💡 Smart recommendations based on learning style (coming soon)
+
+## 🛠️ Tech Stack
+
+- **Frontend**: React.js
+- **Backend**: Python (Flask)
+- **AI Integration**: Anthropic Claude API
+- **Search**: Exa API
+
+## 🚀 Getting Started
+
+### Prerequisites
+
+- Node.js (v14+)
+- Python (3.8+)
+- npm or yarn
+
+### Installation
+
+1. Clone the repository
+```bash
+git clone https://github.com/sksareen/gyaan-public.git
+cd gyaan-public
+```
+
+2. Set up the backend
+```bash
+cd backend
+python3 -m venv venv
+source venv/bin/activate  # On Windows: .\venv\Scripts\activate
+pip install -r requirements.txt
+```
+
+3. Configure environment variables
+```bash
+# Create .env file with:
+ANTHROPIC_API_KEY=your_api_key
+EXA_API_KEY=your_api_key
+```
+
+4. Set up the frontend
+```bash
+cd frontend
+npm install
+```
+
+5. Start the application
+```bash
+# From the root directory
+./start.sh
+```
+
+The application will be available at:
+- Frontend: http://localhost:3000
+- Backend: http://localhost:5001
+
+## 📁 Project Structure
 
 ```
-learning_app_react/
+gyaan-public/
 ├── backend/
-│   ├── app.py
-│   ├── prompts/
-│   ├── requirements.txt
-│   └── venv/
+│   ├── app.py              # Flask application
+│   ├── prompts/            # AI prompt templates
+│   └── requirements.txt    # Python dependencies
 ├── frontend/
-│   ├── public/
 │   ├── src/
-│   │   ├── components/
-│   │   │   ├── LearningForm.js
-│   │   │   ├── Roadmap.js
-│   │   │   └── ModuleContent.js
-│   │   ├── services/
-│   │   │   └── api.js
-│   │   └── App.js
+│   │   ├── components/     # React components
+│   │   ├── services/       # API integration
+│   │   └── App.js         # Main application
 │   └── package.json
-└── start.sh
+└── start.sh               # Startup script
 ```
 
-## Setup Instructions
+## 🤝 Contributing
 
-1. Install Dependencies:
-
-   Backend:
-   ```bash
-   cd backend
-   python3 -m venv venv
-   source venv/bin/activate
-   pip install -r requirements.txt
-   ```
-
-   Frontend:
-   ```bash
-   cd frontend
-   npm install
-   ```
-
-2. Environment Variables:
-   Create a `.env` file in the backend directory:
-   ```
-   ANTHROPIC_API_KEY=<your-anthropic-api-key>
-   EXA_API_KEY=<your-exa-api-key>
-   ```
-
-3. Start the Application:
-   ```bash
-   ./start.sh
-   ```
-   This will start both the frontend (http://localhost:3000) and backend (http://localhost:5001) servers.
-
-## Key Features
-
-- Modular architecture for better code organization and maintainability
-- Clear separation of concerns between UI, state management, and business logic
-- Consistent loading state management across different operations
-- Progress tracking for roadmap sections
-- Error handling and debug logging
-
-## Usage
-
-The modules are imported and used in the main application.
-
-The frontend is built using modular JavaScript components. Each module is responsible for a specific functionality and can be developed independently.
-
-### main.js
-The main entry point that initializes the application and manages global state. It coordinates between different modules and handles the core application flow.
-
-### loading.js
-Handles loading states and UI feedback during asynchronous operations:
-- `setLoading()`: Toggles loading indicators for different operations (goals/roadmap generation)
-- Manages button states, spinners, and loading text
-
-### progress.js 
-Manages the roadmap progress tracking functionality:
-- `updateProgress()`: Updates the progress bar and percentage display
-- Tracks current section vs total sections
-- Handles visibility of the roadmap section
-
-
-## Development Guidelines
-
-### Code Style
-- Use ES6+ features
-- Follow airbnb-style guide
-- Maintain consistent naming conventions
-- Document all public methods and interfaces
-
-### Testing
-- Unit tests for all modules
-- Integration tests for module interactions
-- E2E tests for critical user flows
-- Test coverage minimum: 80%
-
-### Performance
-- Lazy loading for non-critical modules
-- Bundle optimization and code splitting
-- Resource caching strategies
-- Performance monitoring and metrics
-
-### Security
-- Input validation and sanitization
-- XSS prevention
-- CSRF protection
-- Secure data storage practices
-
-## Contributing
+We welcome contributions! Here's how you can help:
 
 1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Write/update tests
-5. Submit a pull request
+2. Create a feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
 
-## Build and Deployment
+Please read our [Contributing Guidelines](CONTRIBUTING.md) for details on our code of conduct and development process.
 
+## 🐛 Bug Reports
+
+Found a bug? Please open an issue with:
+- Clear bug description
+- Steps to reproduce
+- Expected vs actual behavior
+- Screenshots (if applicable)
+
+## 📝 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🙏 Acknowledgments
+
+- [Anthropic](https://www.anthropic.com/) for AI capabilities
+- [Exa](https://exa.ai/) for search functionality
+- All our contributors and supporters
+
+## 📬 Contact
+
+- Project Link: [https://github.com/sksareen/gyaan-public](https://github.com/sksareen/gyaan-public)
+- Report Issues: [Issue Tracker](https://github.com/sksareen/gyaan-public/issues)
+
+---
+
+<p align="center">Made with ❤️ for lifelong learners</p>
