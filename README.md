@@ -8,11 +8,20 @@ Gyaan Learning is an AI-powered education platform that generates personalized l
 
 ## ✨ Features
 
+### Current
 - 🤖 AI-generated learning paths tailored to your goals
 - 📚 Detailed content and resources for each learning module
-- 📊 Progress tracking and learning analytics (coming soon)
-- 🎯 Interactive roadmap visualization (coming soon)
-- 💡 Smart recommendations based on learning style (coming soon)
+- 📝 Save modules to your notebook locally
+
+### Planned
+- 🧠 Interactive practice exercises built-in
+- 📝 Easily answer questions about the content within the app
+
+### Future
+- 🔑 Google login
+- 💡 Smart recommendations based on learning style
+- 📊 Progress tracking and learning analytics
+- 🎯 Interactive roadmap visualization
 
 ## 🛠️ Tech Stack
 
