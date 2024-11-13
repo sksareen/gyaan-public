@@ -1,0 +1,27 @@
+Topic: {topic}
+Proficiency: {proficiency}
+Goals: {goals}
+
+Break down this topic using first principles thinking:
+
+1. Fundamental Truths
+- What are the basic, irrefutable facts?
+- What core principles govern this topic?
+- What assumptions can we challenge?
+
+2. Building Blocks
+- Identify the smallest components
+- How do they interact?
+- What patterns emerge?
+
+3. Cross-Domain Connections
+- What parallels exist in other fields?
+- How can we apply lessons from different domains?
+- What universal principles are at work?
+
+4. Problem-Solving Framework
+- How can we apply first principles to solve problems?
+- What innovative approaches emerge?
+- How can we challenge conventional solutions?
+
+Format response with clear sections, examples, and practical applications.

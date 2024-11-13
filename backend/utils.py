@@ -25,22 +25,17 @@ def validate_request(required_fields):
     return decorator
 
 def extract_text_from_response(content):
-    """
-    Extract clean text from various response formats
-    """
+    """Extract clean text from various response formats"""
     if not content:
-        return ""
+        return ''
         
-    # Convert to string if it's not already
-    content = str(content)
-    
     # Handle TextBlock format
-    if 'TextBlock' in content:
-        match = re.search(r"text='([\s\S]*?)'", content, re.DOTALL)
+    if isinstance(content, str) and 'TextBlock' in content:
+        match = re.search(r"text=[\"'](.*?)[\"']", content, re.DOTALL)
         if match:
-            return match.group(1).strip()
+            return match.group(1)
     
-    return content.strip()
+    return str(content)
 
 def parse_goals(content):
     """
@@ -54,8 +49,11 @@ def parse_goals(content):
     
     for line in lines:
         line = line.strip()
-        # Skip empty lines and headers
-        if not line or line.startswith('#'):
+        # Skip empty lines, headers, and introductory text
+        if (not line or 
+            line.startswith('#') or 
+            'here are' in line.lower() or
+            'learning goals' in line.lower()):
             continue
             
         # Clean up list markers and numbers

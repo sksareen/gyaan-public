@@ -36,7 +36,9 @@ const ModuleContent = ({ moduleData }) => {
     const {
         firstPrinciples: rawFirstPrinciples,
         keyInformation: rawKeyInformation,
-        practiceExercise: rawPracticeExercise
+        practiceExercise: rawPracticeExercise,
+        crossDomainConnections: rawCrossDomainConnections,
+        fundamentalTruths: rawFundamentalTruths
     } = moduleData || {};
 
     const firstPrinciples = parseContent(rawFirstPrinciples);

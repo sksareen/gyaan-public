@@ -18,13 +18,27 @@ const Navigation = () => {
         }, 100); // Small delay to ensure elements are rendered
     };
 
+    const buttonSx = {
+        '&:hover': {
+            backgroundColor: 'grey.100'
+        }
+    };
+
+    const buttonSx2 = {
+        '&:hover': {
+            backgroundColor: 'grey.500',
+            color: 'white',
+            transition: 'all 0.3s ease'
+        }
+    };
+
     return (
         <AppBar 
             position="fixed" 
             color="default" 
             elevation={0}
             sx={{
-                backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                backgroundColor: 'grey.300',
                 backdropFilter: 'blur(8px)',
             }}
         >
@@ -33,34 +47,40 @@ const Navigation = () => {
                     <Button 
                         color="primary"
                         onClick={() => window.location.href = '/'}
+                        sx={buttonSx}
                     >
                         Home
-                    </Button>
-                    <Button 
-                        color="primary"
-                        onClick={() => window.location.href = '/notebook'}
-                    >
-                        My Notebook
                     </Button>
                     {window.location.pathname === '/' && (
                         <>
                             <Button 
                                 color="primary"
                                 onClick={() => scrollToSection('goals-section')}
+                                sx={buttonSx}
                             >
                                 Goals
                             </Button>
                             <Button 
                                 color="primary"
                                 onClick={() => scrollToSection('roadmap-section')}
+                                sx={buttonSx}
                             >
-                                Roadmap
+                                Learning Roadmap
                             </Button>
                             <Button 
                                 color="primary"
                                 onClick={() => scrollToSection('module-section')}
+                                sx={buttonSx}
                             >
                                 Module
+                            </Button>
+                            <Button 
+                                color="primary"
+                                border="1px solid grey"
+                                onClick={() => window.location.href = '/notebook'}
+                                sx={buttonSx2}
+                            >
+                                My Notebook
                             </Button>
                         </>
                     )}

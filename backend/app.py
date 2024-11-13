@@ -45,7 +45,32 @@ SONNET_MODEL = "claude-3-5-sonnet-20241022"
 MAX_RETRIES = 3
 REQUEST_TIMEOUT = 30
 
-SYSTEM_PROMPT = """You are an expert tutor helping create personalized learning plans."""
+SYSTEM_PROMPT = """You are an expert educational AI tutor using Elon Musk's learning principles:
+
+1. First Principles Thinking
+- Break down complex topics into fundamental truths
+- Question assumptions and rebuild from basics
+- Focus on understanding "why" something works
+
+2. Knowledge Trees
+- Start with trunk (fundamentals) before branches
+- Build clear hierarchical relationships
+- Connect new concepts to existing knowledge
+
+3. Learning Approach
+- Focus on fundamentals before details
+- Draw analogies across different fields
+- Learn through active problem-solving
+- Connect concepts across domains
+
+For each interaction:
+1. Break down complex topics into basic elements
+2. Build knowledge from fundamental truths
+3. Create cross-domain connections
+4. Provide practical problem-solving exercises
+5. Challenge assumptions and conventional thinking
+
+Format all responses in clear markdown with appropriate headers, lists, and code blocks when relevant."""
 
 GOALS_PROMPT = """Create 3-5 specific learning goals for {topic} at a {proficiency} level.
 Format each goal as a clear, actionable statement.
@@ -56,6 +81,15 @@ Goals:
 {goals_text}
 
 Format the response as a markdown document with clear sections and bullet points."""
+
+# Add this constant
+ROADMAP_SECTIONS = [
+    "Fundamentals & Prerequisites",
+    "Core Concepts",
+    "Advanced Topics",
+    "Practical Applications",
+    "Final Projects"
+]
 
 class PromptManager:
     _prompts = {}
@@ -380,16 +414,25 @@ def generate_roadmap():
         
         # Generate roadmap with Claude
         message = client.messages.create(
-            model=HAIKU_MODEL,
-            max_tokens=2000,
+            model=SONNET_MODEL,  # Using more capable model for better roadmap
+            max_tokens=3000,     # Increased token limit
             system=SYSTEM_PROMPT,
             messages=[{
                 "role": "user",
-                "content": ROADMAP_PROMPT.format(
-                    topic=topic,
-                    goals_text=goals_text,
-                    proficiency=proficiency
-                )
+                "content": f"""Create a comprehensive learning roadmap for {topic} at {proficiency} level.
+                Goals: {goals_text}
+                
+                Your response MUST include ALL of these sections with equal detail:
+                {chr(10).join(f'- {section}' for section in ROADMAP_SECTIONS)}
+                
+                For each section, include:
+                1. Clear learning objectives
+                2. Core concepts to master
+                3. Practical exercises
+                4. Time estimates
+                5. Success criteria
+                
+                Format as markdown with clear headers and bullet points."""
             }]
         )
         
@@ -460,15 +503,15 @@ def generate_module_content():
 
         # Generate first principles content
         first_principles_message = client.messages.create(
-            model=HAIKU_MODEL,
-            max_tokens=1000,
+            model=SONNET_MODEL,  # Using more capable model for deeper analysis
+            max_tokens=2000,
             system=SYSTEM_PROMPT,
             messages=[{
                 "role": "user",
-                "content": f"""Generate first principles content for learning {topic}.
-                Proficiency level: {proficiency}
-                Learning goals:
-                {goals_text}"""
+                "content": prompts.get_prompt('first_principles', 
+                    topic=topic, 
+                    proficiency=proficiency,
+                    goals=goals_text)
             }]
         )
 
@@ -514,6 +557,8 @@ def generate_module_content():
 
         response_data = {
             "firstPrinciples": clean_text_block(first_principles_message.content),
+            "fundamentalTruths": extract_fundamental_truths(first_principles_message.content),
+            "crossDomainConnections": extract_cross_domain_connections(first_principles_message.content),
             "keyInformation": clean_text_block(key_info_message.content),
             "practiceExercise": clean_text_block(practice_message.content)
         }

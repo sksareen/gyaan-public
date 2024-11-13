@@ -6,6 +6,14 @@
 
 Gyaan Learning is an AI-powered education platform that generates personalized learning paths and roadmaps. By breaking down complex topics into digestible modules, it helps learners master new subjects efficiently and effectively.
 
+## 🎯 Vision
+
+Learning should be addictive. It should be challenging and rewarding. It should be fun. We've all had times where our curiousity and interest in a topic is piqued, and we want to learn more. We fall into rabbit holes on the internet learning information for hours, but often for things that don't really matter.
+
+Gyaan Learning is an attempt to make learning fun, addictive, and rewarding.
+
+We want to make personalised training paths that adapt to your learning style. Enjoy falling down rabbit holes of information that you never knew you were interested in. Look forward to being challenged and learning new things. Be more engaged and retain more information than any other platform.
+
 ## ✨ Features
 
 ### Current

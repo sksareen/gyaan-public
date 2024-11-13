@@ -17,6 +17,7 @@ const LearningForm = ({ onSubmit }) => {
     const [proficiency, setProficiency] = useState('beginner');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
+    const [background, setBackground] = useState('');
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -41,7 +42,7 @@ const LearningForm = ({ onSubmit }) => {
         <Container maxWidth="sm">
             <Box sx={{ mt: 4, mb: 4 }}>
                 <Typography variant="h4" component="h1" gutterBottom align="center">
-                    Learning Path Generator
+                    Gyaan Learning
                 </Typography>
                 <form onSubmit={handleSubmit}>
                     <TextField
@@ -64,6 +65,16 @@ const LearningForm = ({ onSubmit }) => {
                             <MenuItem value="advanced">Advanced</MenuItem>
                         </Select>
                     </FormControl>
+                    <TextField
+                        fullWidth
+                        label="Your background knowledge (other fields/domains)"
+                        value={background}
+                        onChange={(e) => setBackground(e.target.value)}
+                        margin="normal"
+                        multiline
+                        rows={3}
+                        helperText="What other fields are you knowledgeable in? This helps create connections across domains."
+                    />
                     <Button
                         type="submit"
                         variant="contained"
