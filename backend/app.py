@@ -577,6 +577,30 @@ def add_header(response):
         response.headers['Cache-Control'] = 'no-store'
     return response
 
+@app.route('/api/explain_sentence', methods=['POST'])
+def explain_sentence():
+    data = request.get_json()
+    sentence = data.get('sentence', '')
+    topic = data.get('topic', '')
+
+    if not sentence or not topic:
+        return jsonify({'error': 'Missing sentence or topic'}), 400
+
+    try:
+        response = client.messages.create(
+            model=HAIKU_MODEL,
+            max_tokens=200,
+            messages=[{
+                "role": "user",
+                "content": f"Explain this: {sentence} in context of {topic}"
+            }]
+        )
+        explanation = response.content
+        return jsonify({'explanation': explanation})
+    except Exception as e:
+        print(f"Error: {e}")
+        return jsonify({'error': 'Failed to get explanation'}), 500
+
 if __name__ == '__main__':
     print('[app.py] __main__ starting')
     app.run(debug=True, port=5001)

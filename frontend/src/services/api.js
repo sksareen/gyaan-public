@@ -41,10 +41,43 @@ export const generateRoadmap = async (topic, goals, proficiency) => {
 };
 
 export const generateModuleContent = async (topic, goals, proficiency) => {
-    const response = await axios.post(`${API_URL}/generate_module_content`, {
-        topic,
-        goals,
-        proficiency
+    try {
+        const response = await axios.post(`${API_URL}/generate_module_content`, {
+            topic,
+            goals,
+            proficiency
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error in generateModuleContent:', error.response?.data || error.message);
+        throw error;
+    }
+};
+
+export const generateModuleSection = async (topic, goals, proficiency, section) => {
+    try {
+        const response = await axios.post(`${API_URL}/generate_module_section`, {
+            topic,
+            goals,
+            proficiency,
+            section
+        });
+        
+        if (!response.data || !response.data[section]) {
+            throw new Error(`Invalid response format for ${section}`);
+        }
+        
+        return response.data;
+    } catch (error) {
+        console.error('Error in generateModuleSection:', error.response?.data || error.message);
+        throw error;
+    }
+};
+
+export const explainSentence = async (sentence, topic) => {
+    const response = await axios.post(`${API_URL}/api/explain_sentence`, {
+        sentence,
+        topic
     });
     return response.data;
 };

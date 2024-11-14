@@ -89,7 +89,10 @@ function App() {
             selectedGoals: selectedGoals,
             roadmap: roadmapData,
             resources: resources,
-            moduleContent: moduleData,
+            moduleContent: {
+                ...moduleData,
+                topic: currentTopic
+            },
             createdAt: new Date().toISOString()
         };
         
