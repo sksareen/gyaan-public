@@ -10,6 +10,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import NotebookView from './components/NotebookView';
 import ModuleViewer from './components/ModuleViewer';
 import LearningCard from './components/LearningCard';
+import MiniModuleView from './components/MiniModuleView';
 
 function App() {
     const [loading, setLoading] = useState(false);
@@ -27,11 +28,6 @@ function App() {
     });
     const [selectedGoals, setSelectedGoals] = useState([]);
     const [learningCards, setLearningCards] = useState([]); // Add state for learning cards
-    const [dummyCards, setDummyCards] = useState([
-        { id: 1, title: 'Getting Started with React', description: 'A basic introduction to React', type: 'Article' },
-        { id: 2, title: 'Understanding JSX', description: 'A deep dive into JSX syntax', type: 'Article' },
-        { id: 3, title: 'React State Management', description: 'Exploring different state management libraries', type: 'Article' }
-    ]);
 
     const handleFormSubmit = async (topic, proficiency) => {
         setLoading(true);
@@ -39,25 +35,17 @@ function App() {
         try {
             const data = await generateLearningCards(topic, proficiency);
             
-            // Use dummy cards if no cards are returned
-            const cards = data.cards || dummyCards;
+            if (!data.cards || !Array.isArray(data.cards)) {
+                throw new Error('Invalid response format');
+            }
             
-            const formattedCards = cards.map(card => ({
-                id: card.id,
-                title: card.title,
-                description: card.description,
-                type: card.type
-            }));
-
-            setLearningCards(formattedCards);
+            setLearningCards(data.cards);
             setCurrentTopic(topic);
             setCurrentProficiency(proficiency);
         } catch (error) {
             console.error('Error generating learning cards:', error);
-            // Fallback to dummy cards on error
-            setLearningCards(dummyCards);
-            setCurrentTopic(topic);
-            setCurrentProficiency(proficiency);
+            // Show error message to user
+            alert('Failed to generate learning cards. Please try again.');
         } finally {
             setLoading(false);
             setLoadingType('');
@@ -151,6 +139,7 @@ function App() {
                 <Routes>
                     <Route path="/notebook" element={<NotebookView />} />
                     <Route path="/module/:moduleId" element={<ModuleViewer />} />
+                    <Route path="/mini-module/:id" element={<MiniModuleView />} />
                     <Route path="/" element={
                         <Container maxWidth="lg">
                             <LearningForm onSubmit={handleFormSubmit} />

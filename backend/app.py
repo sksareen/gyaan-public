@@ -601,50 +601,149 @@ def explain_sentence():
         print(f"Error: {e}")
         return jsonify({'error': 'Failed to get explanation'}), 500
 
-@app.route('/api/generateLearningCards', methods=['POST'])
+@app.route('/api/generate_learning_cards', methods=['POST'])
 def generate_learning_cards():
-    print('[app.py] generate_learning_cards starting')
     try:
-        if not request.is_json:
-            print('[app.py] Request is not JSON')
-            return jsonify({"error": "Content-Type must be application/json"}), 400
-            
         data = request.get_json()
         topic = data.get('topic')
         proficiency = data.get('proficiency')
         
-        print(f'[app.py] Generating cards for topic: {topic}, proficiency: {proficiency}')
-        
         if not topic or not proficiency:
-            print('[app.py] Missing required fields')
             return jsonify({'error': 'Missing required fields'}), 400
 
-        cards = [
-            {
-                "id": 1,
-                "title": f"Getting Started with {topic}",
-                "description": f"Learn the fundamental concepts of {topic} at {proficiency} level.",
-                "type": "introduction"
-            },
-            {
-                "id": 2,
-                "title": "Core Concepts",
-                "description": f"Master the essential principles and techniques in {topic}.",
-                "type": "concepts"
-            },
-            {
-                "id": 3,
-                "title": "Practical Applications",
-                "description": f"Apply your {topic} knowledge to real-world scenarios.",
-                "type": "application"
+        # Generate cards using Claude
+        message = client.messages.create(
+            model=HAIKU_MODEL,
+            max_tokens=1000,
+            system=SYSTEM_PROMPT,
+            messages=[{
+                "role": "user",
+                "content": f"""Generate 3 learning cards for {topic} at {proficiency} level. Each card should be:
+1. A real-world success story, achievement, or theoretical breakthrough
+2. Inspiring and motivational
+3. Related to {topic}
+4. Appropriate for {proficiency} level learners
+
+Return the response in this exact JSON format:
+{{
+    "cards": [
+        {{
+            "id": 1,
+            "title": "Example Title 1",
+            "description": "Example description 1",
+            "type": "success-story"
+        }},
+        {{
+            "id": 2,
+            "title": "Example Title 2",
+            "description": "Example description 2",
+            "type": "achievement"
+        }},
+        {{
+            "id": 3,
+            "title": "Example Title 3",
+            "description": "Example description 3",
+            "type": "theory"
+        }}
+    ]
+}}"""
+            }]
+        )
+
+        # Parse the response and ensure it's properly formatted
+        try:
+            import json
+            response_content = str(message.content)
+            
+            # Clean up the response if it contains TextBlock
+            if 'TextBlock' in response_content:
+                import re
+                text_match = re.search(r"text='(.*?)'", response_content, re.DOTALL)
+                if text_match:
+                    response_content = text_match.group(1)
+            
+            # Parse the JSON response
+            parsed_content = json.loads(response_content)
+            
+            # Ensure the response has the correct structure
+            if not isinstance(parsed_content, dict) or 'cards' not in parsed_content:
+                raise ValueError('Invalid response format')
+                
+            return jsonify(parsed_content)
+            
+        except (json.JSONDecodeError, ValueError) as e:
+            print(f"Error parsing AI response: {str(e)}")
+            print(f"Raw response: {message.content}")
+            
+            # Fallback to dummy cards if parsing fails
+            fallback_cards = {
+                "cards": [
+                    {
+                        "id": 1,
+                        "title": f"Getting Started with {topic}",
+                        "description": f"Learn the fundamental concepts of {topic} at {proficiency} level.",
+                        "type": "introduction"
+                    },
+                    {
+                        "id": 2,
+                        "title": f"Core Principles of {topic}",
+                        "description": f"Master the essential principles and techniques in {topic}.",
+                        "type": "theory"
+                    },
+                    {
+                        "id": 3,
+                        "title": f"Real-World Applications",
+                        "description": f"Discover how {topic} is applied in practical scenarios.",
+                        "type": "achievement"
+                    }
+                ]
             }
-        ]
-        
-        print(f'[app.py] Returning cards: {cards}')
-        return jsonify({"cards": cards})
-        
+            return jsonify(fallback_cards)
+            
     except Exception as e:
-        print(f"[app.py] Error in generate_learning_cards: {str(e)}")
+        print(f"Error in generate_learning_cards: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/generate_mini_module', methods=['POST'])
+@handle_ai_request()
+def generate_mini_module():
+    try:
+        data = request.get_json()
+        topic = data.get('topic')
+        
+        if not topic:
+            return jsonify({'error': 'Topic is required'}), 400
+
+        # Generate content using Claude
+        message = client.messages.create(
+            model=HAIKU_MODEL,
+            max_tokens=1000,
+            system=SYSTEM_PROMPT,
+            messages=[{
+                "role": "user",
+                "content": f"""Create a mini learning module about {topic}. Include:
+
+1. A clear description of the concept (2-3 paragraphs)
+2. The fundamental truths/first principles (3-5 bullet points)
+3. A concise summary (<300 words) in simple but conceptually dense language
+
+Format each section in markdown."""
+            }]
+        )
+
+        # Parse the response into sections
+        content = str(message.content)
+        sections = content.split('\n\n')
+
+        response_data = {
+            "description": sections[0] if len(sections) > 0 else "",
+            "fundamentals": sections[1] if len(sections) > 1 else "",
+            "summary": sections[2] if len(sections) > 2 else ""
+        }
+
+        return jsonify(response_data)
+
+    except Exception as e:
         return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':

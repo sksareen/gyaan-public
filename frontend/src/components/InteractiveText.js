@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Box, Drawer, Typography, CircularProgress } from '@mui/material';
 import { explainSentence } from '../services/api';
 
@@ -7,13 +7,27 @@ const InteractiveText = ({ children, topic, level = 0 }) => {
   const [isSidePanelOpen, setIsSidePanelOpen] = useState(false);
   const [explanation, setExplanation] = useState('');
   const [loading, setLoading] = useState(false);
+  const [processedText, setProcessedText] = useState([]);
+  const [isShiftPressed, setIsShiftPressed] = useState(false);
 
-  const handleTextClick = (event) => {
+  useEffect(() => {
+    // Split text into sentences (basic split on periods, question marks, and exclamation points)
+    const text = children?.toString() || '';
+    const sentences = text.match(/[^.!?]+[.!?]+/g) || [text];
+    setProcessedText(sentences.map(s => s.trim()));
+  }, [children]);
+
+  const handleTextClick = (event, text) => {
     event.stopPropagation();
-    const text = event.currentTarget.innerText;
-    setSelectedText(text);
+    
+    // If shift is held down, split into words
+    const finalText = event.shiftKey 
+      ? event.target.innerText
+      : text;
+
+    setSelectedText(finalText);
     setIsSidePanelOpen(true);
-    fetchExplanation(text);
+    fetchExplanation(finalText);
   };
 
   const fetchExplanation = async (text) => {
@@ -38,19 +52,68 @@ const InteractiveText = ({ children, topic, level = 0 }) => {
     setExplanation('');
   };
 
+  const renderContent = (sentence, e) => {
+    if (!e?.shiftKey) {
+      return sentence;
+    }
+    
+    // Split sentence into words and preserve spaces
+    return sentence.split(/(\s+)/).map((word, idx) => {
+      // Skip rendering for whitespace
+      if (word.trim() === '') {
+        return word;
+      }
+      
+      return (
+        <Box
+          key={idx}
+          component="span"
+          onClick={(e) => {
+            e.stopPropagation(); // Prevent sentence click
+            handleTextClick(e, word);
+          }}
+          sx={{
+            cursor: 'pointer',
+            '&:hover': {
+              backgroundColor: 'rgba(173, 216, 230, 0.4)',
+              borderRadius: '4px',
+            },
+          }}
+        >
+          {word}
+        </Box>
+      );
+    });
+  };
+
   return (
-    <Box
-      component="span"
-      onClick={handleTextClick}
-      sx={{
-        cursor: 'pointer',
-        '&:hover': {
-          backgroundColor: 'rgba(173, 216, 230, 0.4)',
-          borderRadius: '4px',
-        },
-      }}
-    >
-      {children}
+    <Box component="div">
+      {processedText.map((sentence, index) => (
+        <Box
+          key={index}
+          component="span"
+          onClick={(e) => handleTextClick(e, sentence)}
+          onMouseMove={(e) => {
+            setIsShiftPressed(e.shiftKey);
+            // Re-render content by updating state if shift key changes
+            if (isShiftPressed !== e.shiftKey) {
+              setIsShiftPressed(e.shiftKey);
+            }
+          }}
+          onKeyDown={(e) => setIsShiftPressed(e.shiftKey)}
+          onKeyUp={(e) => setIsShiftPressed(e.shiftKey)}
+          sx={{
+            cursor: 'pointer',
+            '&:hover': {
+              backgroundColor: isShiftPressed ? 'transparent' : 'rgba(173, 216, 230, 0.4)',
+              borderRadius: '4px',
+            },
+            marginRight: '0.2em',
+          }}
+        >
+          {renderContent(sentence, { shiftKey: isShiftPressed })}
+        </Box>
+      ))}
 
       <Drawer
         anchor="right"
@@ -96,4 +159,3 @@ const InteractiveText = ({ children, topic, level = 0 }) => {
 };
 
 export default InteractiveText;
-

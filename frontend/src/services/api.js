@@ -85,7 +85,7 @@ export const explainSentence = async (sentence, topic) => {
 export const generateLearningCards = async (topic, proficiency) => {
     try {
         console.log(`Generating cards for topic: ${topic}, proficiency: ${proficiency}`);
-        const response = await axios.post(`${API_URL}/api/generateLearningCards`, {
+        const response = await axios.post(`${API_URL}/api/generate_learning_cards`, {
             topic,
             proficiency
         });
@@ -95,4 +95,16 @@ export const generateLearningCards = async (topic, proficiency) => {
         console.error('Error in generateLearningCards:', error.response?.data || error.message);
         throw error;
     }
+};
+
+export const generateMiniModule = async (topic) => {
+  try {
+    const response = await axios.post(`${API_URL}/generate_mini_module`, {
+      topic
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error in generateMiniModule:', error.response?.data || error.message);
+    throw error;
+  }
 };
