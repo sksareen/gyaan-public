@@ -4,11 +4,12 @@ import LearningForm from './components/LearningForm';
 import Roadmap from './components/Roadmap';
 import ModuleContent from './components/ModuleContent';
 import Goals from './components/Goals';
-import { generateRoadmap, generateModuleContent, generateGoals } from './services/api';
+import { generateRoadmap, generateModuleContent, generateGoals, generateLearningCards } from './services/api';
 import Navigation from './components/Navigation';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import NotebookView from './components/NotebookView';
 import ModuleViewer from './components/ModuleViewer';
+import LearningCard from './components/LearningCard';
 
 function App() {
     const [loading, setLoading] = useState(false);
@@ -25,21 +26,38 @@ function App() {
         return saved ? JSON.parse(saved) : [];
     });
     const [selectedGoals, setSelectedGoals] = useState([]);
+    const [learningCards, setLearningCards] = useState([]); // Add state for learning cards
+    const [dummyCards, setDummyCards] = useState([
+        { id: 1, title: 'Getting Started with React', description: 'A basic introduction to React', type: 'Article' },
+        { id: 2, title: 'Understanding JSX', description: 'A deep dive into JSX syntax', type: 'Article' },
+        { id: 3, title: 'React State Management', description: 'Exploring different state management libraries', type: 'Article' }
+    ]);
 
     const handleFormSubmit = async (topic, proficiency) => {
         setLoading(true);
-        setLoadingType('goals');
+        setLoadingType('learningCards');
         try {
-            const goalsResponse = await generateGoals(topic, proficiency);
-            if (!goalsResponse.goals || !Array.isArray(goalsResponse.goals)) {
-                throw new Error('Invalid goals format received from server');
-            }
-            setGoals(goalsResponse.goals);
+            const data = await generateLearningCards(topic, proficiency);
+            
+            // Use dummy cards if no cards are returned
+            const cards = data.cards || dummyCards;
+            
+            const formattedCards = cards.map(card => ({
+                id: card.id,
+                title: card.title,
+                description: card.description,
+                type: card.type
+            }));
+
+            setLearningCards(formattedCards);
             setCurrentTopic(topic);
             setCurrentProficiency(proficiency);
         } catch (error) {
-            console.error('Error generating goals:', error);
-            alert(`Error generating goals: ${error.message}. Please try again.`);
+            console.error('Error generating learning cards:', error);
+            // Fallback to dummy cards on error
+            setLearningCards(dummyCards);
+            setCurrentTopic(topic);
+            setCurrentProficiency(proficiency);
         } finally {
             setLoading(false);
             setLoadingType('');
@@ -136,6 +154,23 @@ function App() {
                     <Route path="/" element={
                         <Container maxWidth="lg">
                             <LearningForm onSubmit={handleFormSubmit} />
+                            {learningCards.length > 0 && (
+                                <Box sx={{ 
+                                    display: 'flex', 
+                                    flexWrap: 'wrap', 
+                                    justifyContent: 'center',
+                                    mt: 4 
+                                }}>
+                                    {learningCards.map(card => (
+                                        <LearningCard
+                                            key={card.id}
+                                            title={card.title}
+                                            description={card.description}
+                                            type={card.type}
+                                        />
+                                    ))}
+                                </Box>
+                            )}
                             {goals.length > 0 && (
                                 <Box id="goals-section">
                                     <Goals goals={goals} onGoalsSelected={handleGoalsSelected} />

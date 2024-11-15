@@ -140,7 +140,7 @@ def handle_ai_request(retries=MAX_RETRIES):
     return decorator
 
 # Dummy mode for testing
-DUMMY_MODE = False
+DUMMY_MODE = True
 
 # Test responses
 DUMMY_RESPONSES = {
@@ -600,6 +600,52 @@ def explain_sentence():
     except Exception as e:
         print(f"Error: {e}")
         return jsonify({'error': 'Failed to get explanation'}), 500
+
+@app.route('/api/generateLearningCards', methods=['POST'])
+def generate_learning_cards():
+    print('[app.py] generate_learning_cards starting')
+    try:
+        if not request.is_json:
+            print('[app.py] Request is not JSON')
+            return jsonify({"error": "Content-Type must be application/json"}), 400
+            
+        data = request.get_json()
+        topic = data.get('topic')
+        proficiency = data.get('proficiency')
+        
+        print(f'[app.py] Generating cards for topic: {topic}, proficiency: {proficiency}')
+        
+        if not topic or not proficiency:
+            print('[app.py] Missing required fields')
+            return jsonify({'error': 'Missing required fields'}), 400
+
+        cards = [
+            {
+                "id": 1,
+                "title": f"Getting Started with {topic}",
+                "description": f"Learn the fundamental concepts of {topic} at {proficiency} level.",
+                "type": "introduction"
+            },
+            {
+                "id": 2,
+                "title": "Core Concepts",
+                "description": f"Master the essential principles and techniques in {topic}.",
+                "type": "concepts"
+            },
+            {
+                "id": 3,
+                "title": "Practical Applications",
+                "description": f"Apply your {topic} knowledge to real-world scenarios.",
+                "type": "application"
+            }
+        ]
+        
+        print(f'[app.py] Returning cards: {cards}')
+        return jsonify({"cards": cards})
+        
+    except Exception as e:
+        print(f"[app.py] Error in generate_learning_cards: {str(e)}")
+        return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
     print('[app.py] __main__ starting')

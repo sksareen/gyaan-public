@@ -81,3 +81,18 @@ export const explainSentence = async (sentence, topic) => {
     });
     return response.data;
 };
+
+export const generateLearningCards = async (topic, proficiency) => {
+    try {
+        console.log(`Generating cards for topic: ${topic}, proficiency: ${proficiency}`);
+        const response = await axios.post(`${API_URL}/api/generateLearningCards`, {
+            topic,
+            proficiency
+        });
+        console.log('Received response:', response.data);
+        return response.data;
+    } catch (error) {
+        console.error('Error in generateLearningCards:', error.response?.data || error.message);
+        throw error;
+    }
+};
