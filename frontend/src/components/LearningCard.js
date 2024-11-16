@@ -1,12 +1,13 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, Typography, Box } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { generateMiniModule } from '../services/api';
 
-const LearningCard = ({ title, description, type }) => {
+const LearningCard = ({ title, description, type, setMiniModuleLoading }) => {
   const navigate = useNavigate();
 
   const handleCardClick = async () => {
+    setMiniModuleLoading(true);
     try {
       const content = await generateMiniModule(title);
       // Save to localStorage
@@ -21,10 +22,15 @@ const LearningCard = ({ title, description, type }) => {
       
       localStorage.setItem('savedModules', JSON.stringify([...savedModules, newModule]));
       
+      // Simulate loading delay
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      
       // Navigate to the new mini module
       navigate(`/mini-module/${newModule.id}`);
     } catch (error) {
       console.error('Error fetching mini module content:', error);
+    } finally {
+      setMiniModuleLoading(false);
     }
   };
 

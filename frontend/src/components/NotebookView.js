@@ -8,13 +8,20 @@ import {
     CardActions,
     Button,
     Grid,
-    Chip
+    Chip,
+    Modal,
+    IconButton,
+    Dialog,
+    DialogContent
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
+import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 
 const NotebookView = () => {
     const [savedModules, setSavedModules] = React.useState([]);
     const navigate = useNavigate();
+    const [openMiniModule, setOpenMiniModule] = React.useState(false);
+    const [selectedModule, setSelectedModule] = React.useState(null);
 
     React.useEffect(() => {
         const modules = JSON.parse(localStorage.getItem('savedModules') || '[]');
@@ -50,6 +57,11 @@ const NotebookView = () => {
             .map(goal => goal.trim())
             .filter(goal => goal && goal.length > 0)
             .filter(goal => selectedGoals.includes(goal));
+    };
+
+    const handleOpenMiniModule = (module) => {
+        setSelectedModule(module);
+        setOpenMiniModule(true);
     };
 
     return (
@@ -108,12 +120,41 @@ const NotebookView = () => {
                                     >
                                         View Full Module
                                     </Button>
+                                    <IconButton
+                                        size="small"
+                                        color="primary"
+                                        onClick={() => handleOpenMiniModule(module)}
+                                        aria-label="open mini module"
+                                    >
+                                        <OpenInNewIcon />
+                                    </IconButton>
                                 </CardActions>
                             </Card>
                         </Grid>
                     ))}
                 </Grid>
             </Box>
+
+            <Dialog
+                open={openMiniModule}
+                onClose={() => setOpenMiniModule(false)}
+                maxWidth="md"
+                fullWidth
+            >
+                <DialogContent>
+                    {selectedModule && (
+                        <iframe
+                            src={`/mini-module/${selectedModule.id}`}
+                            style={{
+                                width: '100%',
+                                height: '80vh',
+                                border: 'none'
+                            }}
+                            title="Mini Module View"
+                        />
+                    )}
+                </DialogContent>
+            </Dialog>
         </Container>
     );
 };

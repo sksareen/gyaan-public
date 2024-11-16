@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Container, CircularProgress, Box, Typography, Button } from '@mui/material';
 import LearningForm from './components/LearningForm';
 import Roadmap from './components/Roadmap';
@@ -28,6 +28,7 @@ function App() {
     });
     const [selectedGoals, setSelectedGoals] = useState([]);
     const [learningCards, setLearningCards] = useState([]); // Add state for learning cards
+    const [miniModuleLoading, setMiniModuleLoading] = useState(false);
 
     const handleFormSubmit = async (topic, proficiency) => {
         setLoading(true);
@@ -110,7 +111,7 @@ function App() {
 
     return (
         <Router>
-            {loading && (
+            {(loading || miniModuleLoading) && (
                 <Box
                     sx={{
                         position: 'fixed',
@@ -131,6 +132,7 @@ function App() {
                         {loadingType === 'goals' && 'Generating learning goals...'}
                         {loadingType === 'roadmap' && 'Creating your personalized roadmap...'}
                         {loadingType === 'module' && 'Preparing detailed learning content...'}
+                        {miniModuleLoading && 'Loading module content...'}
                     </Typography>
                 </Box>
             )}
@@ -156,6 +158,7 @@ function App() {
                                             title={card.title}
                                             description={card.description}
                                             type={card.type}
+                                            setMiniModuleLoading={setMiniModuleLoading}
                                         />
                                     ))}
                                 </Box>

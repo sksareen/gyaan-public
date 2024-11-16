@@ -29,7 +29,13 @@ if missing_vars:
 
 # Initialize Flask app
 app = Flask(__name__)
-CORS(app)
+CORS(app, resources={
+    r"/api/*": {
+        "origins": ["http://localhost:3000"],
+        "methods": ["GET", "POST", "OPTIONS"],
+        "allow_headers": ["Content-Type", "Authorization"]
+    }
+})
 
 # Initialize API clients
 try:
@@ -140,7 +146,7 @@ def handle_ai_request(retries=MAX_RETRIES):
     return decorator
 
 # Dummy mode for testing
-DUMMY_MODE = True
+DUMMY_MODE = False
 
 # Test responses
 DUMMY_RESPONSES = {
@@ -221,7 +227,7 @@ Create a simple program that converts temperatures between Celsius and Fahrenhei
 3. Test your functions with these values:
    - 0°C to Fahrenheit (should be 32°F)
    - 100°C to Fahrenheit (should be 212°F)
-   - 98.6°F to Celsius (should be 37°C)
+   - 98.6F to Celsius (should be 37°C)
 
 Bonus: Add input validation and round results to 1 decimal place."""
     },
@@ -577,16 +583,24 @@ def add_header(response):
         response.headers['Cache-Control'] = 'no-store'
     return response
 
-@app.route('/api/explain_sentence', methods=['POST'])
+@app.route('/api/explain-sentence', methods=['POST', 'OPTIONS'])
 def explain_sentence():
-    data = request.get_json()
-    sentence = data.get('sentence', '')
-    topic = data.get('topic', '')
-
-    if not sentence or not topic:
-        return jsonify({'error': 'Missing sentence or topic'}), 400
-
+    if request.method == 'OPTIONS':
+        return '', 204
+        
     try:
+        data = request.get_json()
+        if not data:
+            return jsonify({'error': 'No JSON data received'}), 400
+            
+        sentence = data.get('sentence', '')
+        topic = data.get('topic', '')
+
+        if not sentence or not topic:
+            return jsonify({'error': 'Missing sentence or topic'}), 400
+
+        print(f"Processing request - Sentence: {sentence}, Topic: {topic}")  # Debug log
+
         response = client.messages.create(
             model=HAIKU_MODEL,
             max_tokens=200,
@@ -597,9 +611,10 @@ def explain_sentence():
         )
         explanation = response.content
         return jsonify({'explanation': explanation})
+        
     except Exception as e:
-        print(f"Error: {e}")
-        return jsonify({'error': 'Failed to get explanation'}), 500
+        print(f"Server Error: {str(e)}")  # Debug log
+        return jsonify({'error': f'Server error: {str(e)}'}), 500
 
 @app.route('/api/generate_learning_cards', methods=['POST'])
 def generate_learning_cards():
@@ -716,14 +731,14 @@ def generate_mini_module():
 
         # Generate content using Claude
         message = client.messages.create(
-            model=HAIKU_MODEL,
+            model=SONNET_MODEL,
             max_tokens=1000,
             system=SYSTEM_PROMPT,
             messages=[{
                 "role": "user",
                 "content": f"""Create a mini learning module about {topic}. Include:
 
-1. A clear description of the concept (2-3 paragraphs)
+1. A clear description of the concept (5 concise densesentences)
 2. The fundamental truths/first principles (3-5 bullet points)
 3. A concise summary (<300 words) in simple but conceptually dense language
 
@@ -745,6 +760,12 @@ Format each section in markdown."""
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+@app.route('/mini_module/<id>', methods=['GET'])
+def get_mini_module(id):
+    # Add artificial delay for testing loading state
+    time.sleep(1)  # Remove this in production
+    # Rest of your endpoint logic...
 
 if __name__ == '__main__':
     print('[app.py] __main__ starting')
