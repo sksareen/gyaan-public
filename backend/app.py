@@ -30,10 +30,10 @@ if missing_vars:
 # Initialize Flask app
 app = Flask(__name__)
 CORS(app, resources={
-    r"/api/*": {
-        "origins": ["http://localhost:3000"],
+    r"/*": {
+        "origins": ["http://localhost:3000"],  # Your React app's URL
         "methods": ["GET", "POST", "OPTIONS"],
-        "allow_headers": ["Content-Type", "Authorization"]
+        "allow_headers": ["Content-Type"]
     }
 })
 
@@ -588,19 +588,14 @@ def explain_sentence():
     if request.method == 'OPTIONS':
         return '', 204
         
+    data = request.get_json()
+    sentence = data.get('sentence', '')
+    topic = data.get('topic', '')
+
+    if not sentence or not topic:
+        return jsonify({'error': 'Missing sentence or topic'}), 400
+
     try:
-        data = request.get_json()
-        if not data:
-            return jsonify({'error': 'No JSON data received'}), 400
-            
-        sentence = data.get('sentence', '')
-        topic = data.get('topic', '')
-
-        if not sentence or not topic:
-            return jsonify({'error': 'Missing sentence or topic'}), 400
-
-        print(f"Processing request - Sentence: {sentence}, Topic: {topic}")  # Debug log
-
         response = client.messages.create(
             model=HAIKU_MODEL,
             max_tokens=200,
@@ -609,11 +604,20 @@ def explain_sentence():
                 "content": f"Explain this: {sentence} in context of {topic}"
             }]
         )
-        explanation = response.content
-        return jsonify({'explanation': explanation})
         
+        # Convert the response content to a string
+        explanation = str(response.content)
+        
+        # Clean up the TextBlock format if present
+        if 'TextBlock' in explanation:
+            import re
+            text_match = re.search(r"text='(.*?)'", explanation, re.DOTALL)
+            if text_match:
+                explanation = text_match.group(1)
+        
+        return jsonify({'explanation': explanation})
     except Exception as e:
-        print(f"Server Error: {str(e)}")  # Debug log
+        print(f"Server Error: {str(e)}")
         return jsonify({'error': f'Server error: {str(e)}'}), 500
 
 @app.route('/api/generate_learning_cards', methods=['POST'])

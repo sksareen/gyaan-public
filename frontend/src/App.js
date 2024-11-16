@@ -140,7 +140,7 @@ function App() {
             <Box sx={{ pt: '64px' }}>
                 <Routes>
                     <Route path="/notebook" element={<NotebookView />} />
-                    <Route path="/module/:moduleId" element={<ModuleViewer />} />
+                    {/* <Route path="/module/:moduleId" element={<ModuleViewer />} /> */}
                     <Route path="/mini-module/:id" element={<MiniModuleView />} />
                     <Route path="/" element={
                         <Container maxWidth="lg">

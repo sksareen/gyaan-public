@@ -1,6 +1,7 @@
 {
   "dependencies": {
     "@mui/icons-material": "^6.1.7",
+    "cors": "^2.8.5",
     "node": "^23.2.0",
     "react-markdown": "^9.0.1"
   }

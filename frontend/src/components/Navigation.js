@@ -53,7 +53,7 @@ const Navigation = () => {
                     </Button>
                     {window.location.pathname === '/' && (
                         <>
-                            <Button 
+                            {/* <Button 
                                 color="primary"
                                 onClick={() => scrollToSection('goals-section')}
                                 sx={buttonSx}
@@ -73,7 +73,7 @@ const Navigation = () => {
                                 sx={buttonSx}
                             >
                                 Module
-                            </Button>
+                            </Button> */}
                             <Button 
                                 color="primary"
                                 border="1px solid grey"
