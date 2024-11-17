@@ -51,32 +51,20 @@ SONNET_MODEL = "claude-3-5-sonnet-20241022"
 MAX_RETRIES = 3
 REQUEST_TIMEOUT = 30
 
-SYSTEM_PROMPT = """You are an expert educational AI tutor using Elon Musk's learning principles:
+SYSTEM_PROMPT = """You are a clear, concise educational tutor who:
 
-1. First Principles Thinking
-- Break down complex topics into fundamental truths
-- Question assumptions and rebuild from basics
-- Focus on understanding "why" something works
+1. Breaks complex topics into fundamentals
+2. Builds understanding step-by-step
+3. Connects concepts across domains
+4. Emphasizes practical problem-solving
 
-2. Knowledge Trees
-- Start with trunk (fundamentals) before branches
-- Build clear hierarchical relationships
-- Connect new concepts to existing knowledge
+Format responses with:
+- Core concept first
+- Brief, clear explanations
+- Targeted examples
+- Relevant practice problems
 
-3. Learning Approach
-- Focus on fundamentals before details
-- Draw analogies across different fields
-- Learn through active problem-solving
-- Connect concepts across domains
-
-For each interaction:
-1. Break down complex topics into basic elements
-2. Build knowledge from fundamental truths
-3. Create cross-domain connections
-4. Provide practical problem-solving exercises
-5. Challenge assumptions and conventional thinking
-
-Format all responses in clear markdown with appropriate headers, lists, and code blocks when relevant."""
+Keep all responses focused and actionable."""
 
 GOALS_PROMPT = """Create 3-5 specific learning goals for {topic} at a {proficiency} level.
 Format each goal as a clear, actionable statement.
@@ -597,11 +585,11 @@ def explain_sentence():
 
     try:
         response = client.messages.create(
-            model=HAIKU_MODEL,
-            max_tokens=200,
+            model=SONNET_MODEL,
+            max_tokens=1600,
             messages=[{
                 "role": "user",
-                "content": f"Explain this: {sentence} in context of {topic}"
+                "content": f"Explain '{sentence}' concisely and precisely as it relates to {topic}. Use short sentences. Focus on key points. use simple english and key words. under 200 words"
             }]
         )
         
@@ -643,7 +631,7 @@ def generate_learning_cards():
 3. Related to {topic}
 4. Appropriate for {proficiency} level learners
 
-Return the response in this exact JSON format:
+Return the response in this exact JSON format, with no additional text or formatting:
 {{
     "cards": [
         {{
@@ -654,14 +642,14 @@ Return the response in this exact JSON format:
         }},
         {{
             "id": 2,
-            "title": "Example Title 2",
+            "title": "Example Title 2", 
             "description": "Example description 2",
             "type": "achievement"
         }},
         {{
             "id": 3,
             "title": "Example Title 3",
-            "description": "Example description 3",
+            "description": "Example description 3", 
             "type": "theory"
         }}
     ]
@@ -671,26 +659,41 @@ Return the response in this exact JSON format:
 
         # Parse the response and ensure it's properly formatted
         try:
-            import json
             response_content = str(message.content)
             
             # Clean up the response if it contains TextBlock
             if 'TextBlock' in response_content:
                 import re
-                text_match = re.search(r"text='(.*?)'", response_content, re.DOTALL)
-                if text_match:
-                    response_content = text_match.group(1)
+                # Look for JSON object pattern rather than just text
+                json_match = re.search(r'\{[\s\S]*\}', response_content)
+                if json_match:
+                    response_content = json_match.group(0)
+            
+            # Remove any leading/trailing whitespace and newlines
+            response_content = response_content.strip()
             
             # Parse the JSON response
             parsed_content = json.loads(response_content)
             
-            # Ensure the response has the correct structure
+            # Validate the response structure
             if not isinstance(parsed_content, dict) or 'cards' not in parsed_content:
-                raise ValueError('Invalid response format')
+                raise ValueError('Response missing cards array')
+            
+            if not isinstance(parsed_content['cards'], list) or len(parsed_content['cards']) != 3:
+                raise ValueError('Response must contain exactly 3 cards')
+            
+            for card in parsed_content['cards']:
+                required_fields = ['id', 'title', 'description', 'type']
+                if not all(field in card for field in required_fields):
+                    raise ValueError('Cards missing required fields')
                 
+            # Store the descriptions for use in mini module
+            descriptions = [card['description'] for card in parsed_content['cards']]
+            app.config['last_card_descriptions'] = descriptions
+            
             return jsonify(parsed_content)
             
-        except (json.JSONDecodeError, ValueError) as e:
+        except Exception as e:
             print(f"Error parsing AI response: {str(e)}")
             print(f"Raw response: {message.content}")
             
@@ -711,7 +714,7 @@ Return the response in this exact JSON format:
                     },
                     {
                         "id": 3,
-                        "title": f"Real-World Applications",
+                        "title": f"Real-World Applications of {topic}",
                         "description": f"Discover how {topic} is applied in practical scenarios.",
                         "type": "achievement"
                     }
@@ -733,14 +736,19 @@ def generate_mini_module():
         if not topic:
             return jsonify({'error': 'Topic is required'}), 400
 
-        # Generate content using Claude
+        # Get previously generated card descriptions
+        card_descriptions = app.config.get('last_card_descriptions', [])
+        context = "\n".join(card_descriptions) if card_descriptions else "No previous context available."
+
+        # Generate content using Claude with added context
         message = client.messages.create(
             model=SONNET_MODEL,
             max_tokens=1000,
             system=SYSTEM_PROMPT,
             messages=[{
                 "role": "user",
-                "content": f"""Create a mini learning module about {topic}. Include:
+                "content": f"""
+Create a mini learning module about {topic} using the context {context}. Include:
 
 1. A clear description of the concept (5 concise densesentences)
 2. The fundamental truths/first principles (3-5 bullet points)

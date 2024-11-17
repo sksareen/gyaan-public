@@ -40,9 +40,9 @@ function App() {
                 throw new Error('Invalid response format');
             }
             
-            setLearningCards(data.cards);
             setCurrentTopic(topic);
             setCurrentProficiency(proficiency);
+            setLearningCards(data.cards);
         } catch (error) {
             console.error('Error generating learning cards:', error);
             // Show error message to user

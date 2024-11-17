@@ -9,17 +9,13 @@ export const formatMarkdownText = (text) => {
       text = match[1];
     }
   
-    // First, handle bullet points
+    text = text.replace(/\\n/g, '\n');
+  
     text = text
-      .replace(/([^\n])\s*•\s*/g, '$1\n\n• ') // Add newlines before bullets
-      .replace(/^\s*•\s*/gm, '• ') // Clean up bullet point spacing
-      .replace(/\\n/g, '\n')
-      .replace(/^#\s*@[^#\n]+/gm, '');
-
-    // Split into lines and clean up
-    return text
       .split('\n')
       .map(line => line.trim())
-      .filter(line => line.length > 0)
-      .join('\n');
+      .join('\n')
+      .replace(/\n{3,}/g, '\n\n');
+  
+    return text;
 };

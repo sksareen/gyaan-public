@@ -7,6 +7,7 @@ import SendIcon from '@mui/icons-material/Send';
 import CloseIcon from '@mui/icons-material/Close';
 import { explainSentence } from '../services/api';
 import { formatMarkdownText } from '../utils/textFormatting';
+import remarkGfm from 'remark-gfm';
 
 const MiniModuleView = () => {
   const { id } = useParams();
@@ -36,11 +37,68 @@ const MiniModuleView = () => {
   }, [id]);
 
   const components = {
-    p: ({children}) => (
-      <InteractiveText topic={moduleData?.topic}>
+    p: ({ children }) => (
+      <Typography 
+        component="p" 
+        sx={{ mb: 2 }}
+      >
+        <InteractiveText topic={moduleData?.topic}>{children}</InteractiveText>
+      </Typography>
+    ),
+    
+    ul: ({ children }) => (
+      <Box component="ul" sx={{ pl: 2, mb: 2 }}>
         {children}
-      </InteractiveText>
-    )
+      </Box>
+    ),
+    
+    ol: ({ children }) => (
+      <Box component="ol" sx={{ pl: 2, mb: 2 }}>
+        <InteractiveText topic={moduleData?.topic}>{children}</InteractiveText>
+      </Box>
+    ),
+    
+    li: ({ children }) => {
+      const processChildren = (children) => {
+        return React.Children.map(children, child => {
+          if (typeof child === 'string') return child;
+          if (React.isValidElement(child)) {
+            return child.props.children;
+          }
+          return '';
+        }).join('');
+      };
+
+      return (
+        <Typography component="li" sx={{ mb: 1 }}>
+          <InteractiveText topic={moduleData?.topic}>
+            {processChildren(children)}
+          </InteractiveText>
+        </Typography>
+      );
+    },
+    
+    h1: ({ children }) => (
+      <Typography variant="h4" sx={{ mb: 2 }}>
+        <InteractiveText topic={moduleData?.topic}>{children}</InteractiveText>
+      </Typography>
+    ),
+    h2: ({ children }) => (
+      <Typography variant="h5" sx={{ mb: 2 }}>
+        <InteractiveText topic={moduleData?.topic}>{children}</InteractiveText>
+      </Typography>
+    ),
+    h3: ({ children }) => (
+      <Typography variant="h6" sx={{ mb: 2 }}>
+        <InteractiveText topic={moduleData?.topic}>{children}</InteractiveText>
+      </Typography>
+    ),
+    
+    strong: ({ children }) => (
+      <Box component="strong" sx={{ fontWeight: 'bold' }}>
+        <InteractiveText topic={moduleData?.topic}>{children}</InteractiveText>
+      </Box>
+    ),
   };
 
   const handleExplainSentence = async () => {
@@ -80,6 +138,8 @@ const MiniModuleView = () => {
     );
   }
 
+  // console.log('Content before rendering:', formatMarkdownText(moduleData.content.description));
+
   return (
     <>
       <Container maxWidth="md">
@@ -88,21 +148,30 @@ const MiniModuleView = () => {
           
           <Box mb={3}>
             {/* <Typography variant="h6" gutterBottom>Overview</Typography> */}
-            <ReactMarkdown components={components}>
+            <ReactMarkdown
+              components={components}
+              remarkPlugins={[remarkGfm]}
+            >
               {formatMarkdownText(moduleData.content.description)}
             </ReactMarkdown>
           </Box>
           
           <Box mb={3}>
             {/* <Typography variant="h6" gutterBottom>First Principles</Typography> */}
-            <ReactMarkdown components={components}>
+            <ReactMarkdown
+              components={components}
+              remarkPlugins={[remarkGfm]}
+            >
               {formatMarkdownText(moduleData.content.fundamentals)}
             </ReactMarkdown>
           </Box>
 
           <Box mb={3}>
             {/* <Typography variant="h6" gutterBottom>Key Concepts</Typography> */}
-            <ReactMarkdown components={components}>
+            <ReactMarkdown
+              components={components}
+              remarkPlugins={[remarkGfm]}
+            >
               {formatMarkdownText(moduleData.content.summary)}
             </ReactMarkdown>
           </Box>
@@ -163,9 +232,12 @@ const MiniModuleView = () => {
             </IconButton>
           </Box>
           
-          <InteractiveText topic={moduleData?.topic}>
+          <ReactMarkdown
+            components={components}
+            remarkPlugins={[remarkGfm]}
+          >
             {formatMarkdownText(explanation)}
-          </InteractiveText>
+          </ReactMarkdown>
           
         </Box>
       </Drawer>

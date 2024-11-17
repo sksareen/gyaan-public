@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Box, Drawer, Typography, CircularProgress, TextField, Button } from '@mui/material';
 import { explainSentence } from '../services/api';
 import { formatMarkdownText } from '../utils/textFormatting';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 const InteractiveText = ({ children, topic, level = 0 }) => {
   const [selectedText, setSelectedText] = useState(null);
@@ -9,140 +11,154 @@ const InteractiveText = ({ children, topic, level = 0 }) => {
   const [explanation, setExplanation] = useState('');
   const [loading, setLoading] = useState(false);
   const [processedText, setProcessedText] = useState([]);
-  const [isShiftPressed, setIsShiftPressed] = useState(false);
   const [question, setQuestion] = useState('');
   const [isExplaining, setIsExplaining] = useState(false);
+  const [isShiftPressed, setIsShiftPressed] = useState(false);
 
   useEffect(() => {
-    // Split text into sentences (improved regex to handle bullet points)
     const text = children?.toString() || '';
-    const sentences = text
-      .split(/(?<=\.|\?|\!|\•)\s+/)
-      .filter(s => s.trim().length > 0);
-    setProcessedText(sentences);
+    setProcessedText(text.split(/(?<=\.|\?|\!)(?:\s+|\n)/m).filter(s => s.trim()));
   }, [children]);
 
-  const handleTextClick = (event, text) => {
-    event.stopPropagation();
-    
-    // If shift is held down, split into words
-    const finalText = event.shiftKey 
-      ? event.target.innerText
-      : text;
+  // Add shift key detection
+  useEffect(() => {
+    const handleKeyDown = (e) => setIsShiftPressed(e.shiftKey);
+    const handleKeyUp = (e) => setIsShiftPressed(false);
 
-    setSelectedText(finalText);
-    setIsSidePanelOpen(true);
-    fetchExplanation(finalText);
-  };
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keyup', handleKeyUp);
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keyup', handleKeyUp);
+    };
+  }, []);
 
   const fetchExplanation = async (text) => {
-    setLoading(true);
-    try {
-      if (!topic) {
-        throw new Error('Topic is required for explanation');
+    if (!topic) throw new Error('Topic is required');
+    const data = await explainSentence(text, topic);
+    return formatMarkdownText(data.explanation);
+  };
+
+  const handleTextInteraction = async (event, text) => {
+    event.stopPropagation();
+    
+    let finalText = text;
+    if (event.shiftKey) {
+      // Get the word under the cursor when shift is pressed
+      const range = document.caretRangeFromPoint(event.clientX, event.clientY);
+      if (range) {
+        // Expand selection to word boundaries
+        range.expand('word');
+        finalText = range.toString().trim();
       }
-      const data = await explainSentence(text, topic);
-      // Format the explanation before setting it
-      const formattedExplanation = formatMarkdownText(data.explanation);
-      setExplanation(formattedExplanation);
+    }
+    
+    if (!finalText.trim()) return;
+    
+    setSelectedText(finalText);
+    setIsSidePanelOpen(true);
+    setLoading(true);
+    
+    try {
+      const explanation = await fetchExplanation(finalText);
+      setExplanation(explanation);
     } catch (error) {
-      console.error('Error fetching explanation:', error);
+      console.error('Error:', error);
       setExplanation('Failed to fetch explanation. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleClose = () => {
-    setIsSidePanelOpen(false);
-    setSelectedText(null);
-    setExplanation('');
-  };
-
-  const renderContent = (sentence, e) => {
-    if (!e?.shiftKey) {
-      return sentence;
-    }
-    
-    // Split sentence into words and preserve spaces
-    return sentence.split(/(\s+)/).map((word, idx) => {
-      // Skip rendering for whitespace
-      if (word.trim() === '') {
-        return word;
-      }
-      
-      return (
-        <Box
-          key={idx}
-          component="span"
-          onClick={(e) => {
-            e.stopPropagation(); // Prevent sentence click
-            handleTextClick(e, word);
-          }}
-          sx={{
-            cursor: 'pointer',
-            '&:hover': {
-              backgroundColor: 'rgba(173, 216, 230, 0.4)',
-              borderRadius: '4px',
-            },
-          }}
-        >
-          {word}
-        </Box>
-      );
-    });
-  };
-
   const handleQuestionSubmit = async () => {
     if (!question.trim()) return;
     
     setIsExplaining(true);
-    
     try {
-      const data = await explainSentence(question, topic);
-      const formattedExplanation = formatMarkdownText(data.explanation);
-      setExplanation(formattedExplanation);
+      const explanation = await fetchExplanation(question);
+      setExplanation(explanation);
     } catch (error) {
-      console.error('Error getting explanation:', error);
       setExplanation('Sorry, there was an error getting the explanation.');
     } finally {
       setIsExplaining(false);
     }
   };
 
+  // Simplified markdown components
+  const markdownComponents = {
+    p: ({ children }) => (
+      <Typography paragraph>
+        <InteractiveText topic={topic} level={level + 1}>{children}</InteractiveText>
+      </Typography>
+    ),
+    li: ({ children }) => (
+      <Typography component="li" sx={{ mb: 1 }}>
+        <InteractiveText topic={topic} level={level + 1}>{children}</InteractiveText>
+      </Typography>
+    ),
+    strong: ({ children }) => (
+      <Box component="strong" sx={{ fontWeight: 'bold' }}>
+        <InteractiveText topic={topic} level={level + 1}>{children}</InteractiveText>
+      </Box>
+    ),
+  };
+
+  const resetPanel = () => {
+    setIsSidePanelOpen(false);
+    setSelectedText(null);
+    setExplanation('');
+    setQuestion('');
+  };
+
   return (
-    <Box component="div">
+    <Box component="span">
       {processedText.map((sentence, index) => (
         <Box
           key={index}
           component="span"
-          onClick={(e) => handleTextClick(e, sentence)}
-          onMouseMove={(e) => {
-            setIsShiftPressed(e.shiftKey);
-            // Re-render content by updating state if shift key changes
-            if (isShiftPressed !== e.shiftKey) {
-              setIsShiftPressed(e.shiftKey);
-            }
-          }}
-          onKeyDown={(e) => setIsShiftPressed(e.shiftKey)}
-          onKeyUp={(e) => setIsShiftPressed(e.shiftKey)}
+          onClick={(e) => handleTextInteraction(e, sentence)}
           sx={{
             cursor: 'pointer',
-            '&:hover': {
-              backgroundColor: isShiftPressed ? 'transparent' : 'rgba(173, 216, 230, 0.4)',
-              borderRadius: '4px',
-            },
-            marginRight: '0.2em',
+            userSelect: 'text',
+            ...(isShiftPressed ? {} : {
+              '&:hover': {
+                backgroundColor: (theme) => 
+                  theme.palette.mode === 'light' 
+                    ? 'rgba(173, 216, 230, 0.4)'
+                    : 'rgba(173, 216, 230, 0.2)',
+                borderRadius: '4px',
+              }
+            })
           }}
         >
-          {renderContent(sentence, { shiftKey: isShiftPressed })}
+          {sentence.split(' ').map((word, wordIndex) => (
+            <Box
+              key={wordIndex}
+              component="span"
+              sx={{
+                padding: '0 2px',
+                borderRadius: '2px',
+                ...(isShiftPressed && {
+                  '&:hover': {
+                    backgroundColor: (theme) => 
+                      theme.palette.mode === 'light' 
+                        ? 'rgba(173, 216, 230, 0.4)'
+                        : 'rgba(173, 216, 230, 0.2)',
+                  }
+                })
+              }}
+            >
+              {word + ' '}
+            </Box>
+          ))}
         </Box>
       ))}
 
       <Drawer
         anchor="right"
         open={isSidePanelOpen}
-        onClose={handleClose}
+        onClose={resetPanel}
         sx={{
           '& .MuiDrawer-paper': {
             width: '10%',
@@ -157,52 +173,22 @@ const InteractiveText = ({ children, topic, level = 0 }) => {
         <Box sx={{ p: 3 }}>
           {selectedText && (
             <>
-              <Typography 
-                variant="h6" 
-                gutterBottom 
-                component="div"
-                sx={{
-                  whiteSpace: 'pre-wrap',  // Preserve whitespace and line breaks
-                  '& .bullet-point': {
-                    display: 'block',
-                    marginLeft: '1em',
-                    '&::before': {
-                      content: '"• "',
-                      marginLeft: '-1em',
-                    }
-                  }
-                }}
-              >
-                {selectedText.split('\n').map((line, index) => {
-                  const isBulletPoint = line.trim().startsWith('•');
-                  return (
-                    <React.Fragment key={index}>
-                      {isBulletPoint ? (
-                        <span className="bullet-point">{line.replace('•', '').trim()}</span>
-                      ) : (
-                        line
-                      )}
-                      {index < selectedText.split('\n').length - 1 && <br />}
-                    </React.Fragment>
-                  );
-                })}
+              <Typography variant="h6" gutterBottom>
+                {selectedText}
               </Typography>
+              
               {loading ? (
-                <Box
-                  sx={{
-                    display: 'flex',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    minHeight: '100px',
-                  }}
-                >
+                <Box sx={{ display: 'flex', justifyContent: 'center', my: 2 }}>
                   <CircularProgress />
                 </Box>
               ) : (
-                <InteractiveText topic={topic} level={level + 1}>
-                  {explanation}
-                </InteractiveText>
+                <Box sx={{ my: 2 }}>
+                  <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>
+                    {explanation}
+                  </ReactMarkdown>
+                </Box>
               )}
+
               <Box sx={{ mt: 4 }}>
                 <TextField
                   fullWidth
@@ -210,11 +196,7 @@ const InteractiveText = ({ children, topic, level = 0 }) => {
                   label="Ask a question"
                   value={question}
                   onChange={(e) => setQuestion(e.target.value)}
-                  onKeyPress={(e) => {
-                    if (e.key === 'Enter') {
-                      handleQuestionSubmit();
-                    }
-                  }}
+                  onKeyPress={(e) => e.key === 'Enter' && handleQuestionSubmit()}
                   sx={{ mb: 2 }}
                 />
                 <Button
