@@ -51,6 +51,14 @@ const Navigation = () => {
                     >
                         Home
                     </Button>
+                    <Button 
+                        color="primary"
+                        border="1px solid grey"
+                        onClick={() => window.location.href = '/notebook'}
+                        sx={buttonSx2}
+                    >
+                        My Notebook
+                    </Button>
                     {window.location.pathname === '/' && (
                         <>
                             {/* <Button 
@@ -74,14 +82,6 @@ const Navigation = () => {
                             >
                                 Module
                             </Button> */}
-                            <Button 
-                                color="primary"
-                                border="1px solid grey"
-                                onClick={() => window.location.href = '/notebook'}
-                                sx={buttonSx2}
-                            >
-                                My Notebook
-                            </Button>
                         </>
                     )}
                 </Box>

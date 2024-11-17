@@ -10,6 +10,8 @@ import {
     Box,
     Typography
 } from '@mui/material';
+import { ThemeProvider } from '@mui/material/styles';
+import theme from './Theme';
 import { generateGoals } from '../services/api';
 
 const LearningForm = ({ onSubmit }) => {

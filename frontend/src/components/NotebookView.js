@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { 
     Box, 
     Container, 
@@ -6,26 +6,33 @@ import {
     Card, 
     CardContent, 
     CardActions,
-    Button,
     Grid,
     Chip,
-    Modal,
     IconButton,
     Dialog,
     DialogContent
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
+import DeleteIcon from '@mui/icons-material/Delete';
+import ViewListIcon from '@mui/icons-material/ViewList';
+import ViewModuleIcon from '@mui/icons-material/ViewModule';
 
 const NotebookView = () => {
     const [savedModules, setSavedModules] = React.useState([]);
     const navigate = useNavigate();
     const [openMiniModule, setOpenMiniModule] = React.useState(false);
     const [selectedModule, setSelectedModule] = React.useState(null);
+    const [isListView, setIsListView] = useState(false);
 
     React.useEffect(() => {
-        const modules = JSON.parse(localStorage.getItem('savedModules') || '[]');
-        setSavedModules(modules);
+        try {
+            const modules = JSON.parse(localStorage.getItem('savedModules') || '[]');
+            setSavedModules(Array.isArray(modules) ? modules : []);
+        } catch (error) {
+            console.error('Error parsing savedModules from localStorage:', error);
+            setSavedModules([]);
+        }
     }, []);
 
     const formatDate = (dateString) => {
@@ -36,104 +43,135 @@ const NotebookView = () => {
         });
     };
 
-    const processGoals = (goals, selectedGoals) => {
-        if (!goals || !selectedGoals) return [];
-        
-        let finalGoals = Array.isArray(goals) ? goals : [goals];
-        
-        return finalGoals
-            .flatMap(goal => {
-                if (typeof goal === 'string') {
-                    return goal
-                        .replace(/\\n\\n/g, '\n\n')
-                        .replace(/\\n/g, '\n')
-                        .replace(/\\"/g, '"')
-                        .replace(/\\\\/g, '\\')
-                        .split(/\n+/)
-                        .map(g => g.replace(/^\d+\.\s*/, ''));
-                }
-                return [goal];
-            })
-            .map(goal => goal.trim())
-            .filter(goal => goal && goal.length > 0)
-            .filter(goal => selectedGoals.includes(goal));
-    };
-
     const handleOpenMiniModule = (module) => {
         setSelectedModule(module);
         setOpenMiniModule(true);
     };
 
+    const handleDeleteModule = (moduleId) => {
+        const updatedModules = savedModules.filter(module => module.id !== moduleId);
+        localStorage.setItem('savedModules', JSON.stringify(updatedModules));
+        setSavedModules(updatedModules);
+    };
+
+    const toggleView = () => {
+        setIsListView(prev => !prev);
+    };
+
     return (
         <Container maxWidth="lg">
-            <Box sx={{ mt: 8, mb: 4 }}>
-                <Typography variant="h4" gutterBottom>
-                    My Learning Notebook
-                </Typography>
-                <Grid container spacing={3}>
-                    {savedModules.map((module) => (
-                        <Grid item xs={12} md={6} key={module.id}>
-                            <Card>
-                                <CardContent>
-                                    <Typography variant="h5" gutterBottom>
+            <Box sx={{ mt: 8, mb: 4, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                <Box sx={{ flexGrow: 1, display: 'flex', justifyContent: 'center' }}>
+                    <Typography variant="h4" gutterBottom>
+                        My Learning Notebook
+                    </Typography>
+                </Box>
+                <IconButton 
+                    onClick={toggleView} 
+                    color="primary" 
+                    sx={{ 
+                        marginLeft: 'auto', 
+                        boxShadow: 2 
+                    }}
+                >
+                    {isListView ? <ViewModuleIcon /> : <ViewListIcon />}
+                </IconButton>
+            </Box>
+            <Grid container spacing={2}>
+                {Array.isArray(savedModules) && savedModules.map((module) => (
+                    <Grid item 
+                        key={module.id} 
+                        xs={isListView ? 12 : 12}
+                        sm={isListView ? 12 : 6}
+                        md={isListView ? 12 : 4}
+                    >
+                        <Card sx={{ 
+                            display: 'flex', 
+                            flexDirection: isListView ? 'row' : 'column',
+                            alignItems: isListView ? 'center' : 'flex-start',
+                            padding: isListView ? '8px 16px' : '16px',
+                            minHeight: isListView ? 'auto' : '180px',
+                            maxHeight: isListView ? '80px' : '180px',
+                            height: isListView ? '80px' : 'auto',
+                        }}>
+                            <CardContent sx={{ 
+                                flex: '1 0 auto',
+                                display: 'flex',
+                                flexDirection: isListView ? 'row' : 'column',
+                                alignItems: isListView ? 'center' : 'flex-start',
+                                padding: isListView ? '0' : '16px'
+                            }}>
+                                <Box sx={{ flexGrow: 1 }}>
+                                    <Typography variant="h6" gutterBottom>
                                         {module.topic}
                                     </Typography>
-                                    <Chip 
+                                    {/* <Chip 
                                         label={module.proficiency} 
                                         color="primary" 
                                         size="small" 
-                                        sx={{ mb: 2 }}
-                                    />
-                                    <Typography color="textSecondary" gutterBottom>
-                                        Created: {formatDate(module.createdAt)}
+                                        sx={{ mr: 2 }}
+                                    /> */}
+                                    <Typography color="textSecondary" variant="body2">
+                                        Started: {formatDate(module.createdAt)}
                                     </Typography>
-                                    <Typography variant="subtitle1" gutterBottom>
-                                        Selected Goals:
-                                    </Typography>
-                                    <Box sx={{ pl: 2 }}>
-                                        {processGoals(module.goals, module.selectedGoals).map((goal, index) => (
-                                            <Typography 
-                                                key={index} 
-                                                variant="body2" 
-                                                sx={{ 
-                                                    mb: 1,
-                                                    display: 'flex',
-                                                    alignItems: 'center',
-                                                    '&:before': {
-                                                        content: '"•"',
-                                                        marginRight: '8px',
-                                                        color: 'primary.main',
-                                                        fontSize: '1.2em'
-                                                    }
-                                                }}
-                                            >
-                                                {goal}
+                                    {/* Only show goals in grid view */}
+                                    {/* {!isListView && module.selectedGoals && (
+                                        <>
+                                            <Typography variant="subtitle1" gutterBottom sx={{ mt: 2 }}>
+                                                Selected Goals:
                                             </Typography>
-                                        ))}
-                                    </Box>
-                                </CardContent>
-                                <CardActions>
-                                    <Button 
-                                        size="small" 
-                                        color="primary"
-                                        onClick={() => navigate(`/module/${module.id}`)}
-                                    >
-                                        View Full Module
-                                    </Button>
-                                    <IconButton
-                                        size="small"
-                                        color="primary"
-                                        onClick={() => handleOpenMiniModule(module)}
-                                        aria-label="open mini module"
-                                    >
-                                        <OpenInNewIcon />
-                                    </IconButton>
-                                </CardActions>
-                            </Card>
-                        </Grid>
-                    ))}
-                </Grid>
-            </Box>
+                                            <Box sx={{ pl: 2 }}>
+                                                {module.selectedGoals.map((goal, index) => (
+                                                    <Typography 
+                                                        key={index} 
+                                                        variant="body2" 
+                                                        sx={{ 
+                                                            mb: 1,
+                                                            display: 'flex',
+                                                            alignItems: 'center',
+                                                            '&:before': {
+                                                                content: '"•"',
+                                                                marginRight: '8px',
+                                                                color: 'primary.main',
+                                                                fontSize: '1.2em'
+                                                            }
+                                                        }}
+                                                    >
+                                                        {goal}
+                                                    </Typography>
+                                                ))}
+                                            </Box>
+                                        </>
+                                    )} */}
+                                </Box>
+                            </CardContent>
+                            <CardActions sx={{ 
+                                display: 'flex',
+                                flexDirection: 'row',
+                                padding: isListView ? '0' : '16px',
+                                alignSelf: 'center'
+                            }}>
+                                <IconButton
+                                    size="small"
+                                    color="primary"
+                                    onClick={() => handleOpenMiniModule(module)}
+                                    aria-label="open mini module"
+                                >
+                                    <OpenInNewIcon />
+                                </IconButton>
+                                <IconButton
+                                    size="small"
+                                    color="error"
+                                    onClick={() => handleDeleteModule(module.id)}
+                                    aria-label="delete module"
+                                >
+                                    <DeleteIcon />
+                                </IconButton>
+                            </CardActions>
+                        </Card>
+                    </Grid>
+                ))}
+            </Grid>
 
             <Dialog
                 open={openMiniModule}

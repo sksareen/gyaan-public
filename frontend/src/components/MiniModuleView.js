@@ -200,13 +200,6 @@ const MiniModuleView = () => {
             </Box>
           </Box>
 
-          <Button 
-            variant="outlined" 
-            onClick={() => navigate('/notebook')}
-            sx={{ mb: 4 }}
-          >
-            Back to Notebook
-          </Button>
         </Box>
       </Container>
       
