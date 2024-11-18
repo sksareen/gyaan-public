@@ -1,39 +1,52 @@
 import React, { useState, useEffect } from 'react';
-
-import { Box } from '@mui/material';
+import { Box, Button } from '@mui/material';
+import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import { explainSentence } from '../services/api';
 import { formatMarkdownText } from '../utils/textFormatting';
 import SideWindow from './SideWindow';
 
 const InteractiveText = ({ children, topic, level = 0 }) => {
-  const [selectedText, setSelectedText] = useState(null);
+  const [selectedText, setSelectedText] = useState('');
   const [isSidePanelOpen, setIsSidePanelOpen] = useState(false);
   const [explanation, setExplanation] = useState('');
   const [loading, setLoading] = useState(false);
-  const [processedText, setProcessedText] = useState([]);
-  const [isShiftPressed, setIsShiftPressed] = useState(false);
   const [userQuestion, setUserQuestion] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
+  const [showAskButton, setShowAskButton] = useState(false);
 
   const effectiveTopic = topic || 'default topic';
 
-  useEffect(() => {
-    const text = children?.toString() || '';
-    setProcessedText(text.split(/(?<=\.|\?|\!|\:|\-)(?:\s+|\n)/m ).filter(s => s.trim()));
-  }, [children]);
+  // Function to handle text selection
+  const handleMouseUp = () => {
+    const selection = window.getSelection();
+    const selectedText = selection.toString().trim();
+    if (selectedText) {
+      setSelectedText(selectedText);
+      setShowAskButton(true);
+    } else {
+      setShowAskButton(false);
+    }
+  };
+
+  // Function to handle key presses
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter' && selectedText) {
+      setUserQuestion(selectedText);
+      handleQuestionSubmit();
+    }
+  };
 
   useEffect(() => {
-    const handleKeyDown = (e) => setIsShiftPressed(e.shiftKey);
-    const handleKeyUp = (e) => setIsShiftPressed(false);
+    // Add event listeners for mouseup and keydown
+    document.addEventListener('mouseup', handleMouseUp);
+    document.addEventListener('keydown', handleKeyPress);
 
-    window.addEventListener('keydown', handleKeyDown);
-    window.addEventListener('keyup', handleKeyUp);
-
+    // Clean up event listeners on unmount
     return () => {
-      window.removeEventListener('keydown', handleKeyDown);
-      window.removeEventListener('keyup', handleKeyUp);
+      document.removeEventListener('mouseup', handleMouseUp);
+      document.removeEventListener('keydown', handleKeyPress);
     };
-  }, []);
+  }, [selectedText]);
 
   const fetchExplanation = async (text) => {
     if (!effectiveTopic) {
@@ -43,32 +56,22 @@ const InteractiveText = ({ children, topic, level = 0 }) => {
     return formatMarkdownText(data.explanation);
   };
 
-  const handleTextInteraction = async (event, text) => {
-    event.stopPropagation();
+  const handleAskAboutSelection = async () => {
+    if (!selectedText.trim()) return;
     
-    let finalText = text;
-    if (event.shiftKey) {
-      const range = document.caretRangeFromPoint(event.clientX, event.clientY);
-      if (range) {
-        range.expand('word');
-        finalText = range.toString().trim();
-      }
-    }
-    
-    if (!finalText.trim()) return;
-    
-    setSelectedText(finalText);
     setIsSidePanelOpen(true);
     setLoading(true);
     
     try {
-      const explanation = await fetchExplanation(finalText);
+      const explanation = await fetchExplanation(selectedText);
       setExplanation(explanation);
+      setUserQuestion(selectedText);
     } catch (error) {
       console.error('Error:', error);
       setExplanation('Failed to fetch explanation. Please try again.');
     } finally {
       setLoading(false);
+      setShowAskButton(false);
     }
   };
 
@@ -80,62 +83,45 @@ const InteractiveText = ({ children, topic, level = 0 }) => {
     try {
       const explanation = await explainSentence(userQuestion, effectiveTopic);
       setExplanation(formatMarkdownText(explanation.explanation));
+      setIsSidePanelOpen(true);
     } catch (error) {
       setExplanation('Sorry, there was an error getting the explanation.');
     } finally {
       setIsProcessing(false);
+      setShowAskButton(false);
     }
   };
 
   return (
-    <Box component="span">
-      {processedText.map((sentence, index) => (
-        <Box
-          key={index}
-          component="span"
-          onClick={(e) => handleTextInteraction(e, sentence)}
+    <Box component="span" onMouseUp={handleMouseUp}>
+      {children}
+      
+      {showAskButton && (
+        <Button
+          variant="contained"
+          size="small"
+          startIcon={<HelpOutlineIcon />}
+          onClick={handleAskAboutSelection}
           sx={{
-            cursor: 'pointer',
-            userSelect: 'text',
-            ...(isShiftPressed ? {} : {
-              '&:hover': {
-                backgroundColor: (theme) => 
-                  theme.palette.mode === 'light' 
-                    ? 'rgba(173, 216, 230, 0.4)'
-                    : 'rgba(173, 216, 230, 0.2)',
-                borderRadius: '4px',
-              }
-            })
+            position: 'fixed',
+            bottom: '100px',
+            right: '40px',
+            zIndex: 1000,
+            backgroundColor: 'primary.main',
+            '&:hover': {
+              backgroundColor: 'primary.dark',
+            },
           }}
         >
-          {sentence.split(' ').map((word, wordIndex) => (
-            <Box
-              key={wordIndex}
-              component="span"
-              sx={{
-                padding: '0 2px',
-                borderRadius: '2px',
-                ...(isShiftPressed && {
-                  '&:hover': {
-                    backgroundColor: (theme) => 
-                      theme.palette.mode === 'light' 
-                        ? 'rgba(173, 216, 230, 0.4)'
-                        : 'rgba(173, 216, 230, 0.2)',
-                  }
-                })
-              }}
-            >
-              {word + ' '}
-            </Box>
-          ))}
-        </Box>
-      ))}
+          Ask about selection
+        </Button>
+      )}
 
       <SideWindow
         open={isSidePanelOpen}
         onClose={() => {
           setIsSidePanelOpen(false);
-          setSelectedText(null);
+          setSelectedText('');
           setUserQuestion('');
         }}
         title={selectedText ? `Digging deeper into: "${selectedText}"` : 'Ask a question'}

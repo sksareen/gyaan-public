@@ -38,21 +38,25 @@ const Navigation = () => {
             color="default" 
             elevation={0}
             sx={{
-                backgroundColor: 'grey.300',
+                backgroundColor: '#00c464',
                 backdropFilter: 'blur(8px)',
+                color: 'white',
+                fontWeight: 'bold',
+                fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
             }}
         >
             <Toolbar>
                 <Box sx={{ display: 'flex', gap: 2, margin: '0 auto' }}>
                     <Button 
-                        color="primary"
+                        color="white"
                         onClick={() => window.location.href = '/'}
                         sx={buttonSx}
                     >
                         Home
                     </Button>
                     <Button 
-                        color="primary"
+                        color="white"
+                        fontWeight="bold"
                         border="1px solid grey"
                         onClick={() => window.location.href = '/notebook'}
                         sx={buttonSx2}

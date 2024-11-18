@@ -4,6 +4,8 @@ import CloseIcon from '@mui/icons-material/Close';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import InteractiveText from './InteractiveText';
+import BookmarkIcon from '@mui/icons-material/Bookmark';
+import BookmarkBorderIcon from '@mui/icons-material/BookmarkBorder';
 
 const SideWindow = ({
   open,
@@ -19,6 +21,36 @@ const SideWindow = ({
   level = 0,
   topic,
 }) => {
+  const [isSaved, setIsSaved] = React.useState(false);
+
+  React.useEffect(() => {
+    if (!content || !topic) return;
+    const savedExplanations = JSON.parse(localStorage.getItem(`explanations-${topic}`) || '[]');
+    setIsSaved(savedExplanations.some(item => item.content === content));
+  }, [content, topic]);
+
+  const handleSave = () => {
+    if (!content || !topic) return;
+    
+    const savedExplanations = JSON.parse(localStorage.getItem(`explanations-${topic}`) || '[]');
+    
+    if (isSaved) {
+      const filtered = savedExplanations.filter(item => item.content !== content);
+      localStorage.setItem(`explanations-${topic}`, JSON.stringify(filtered));
+      setIsSaved(false);
+    } else {
+      const newSavedItem = {
+        selectedText: title.replace('Digging deeper into: "', '').replace('"', ''),
+        question,
+        content,
+        timestamp: new Date().toISOString(),
+      };
+      savedExplanations.push(newSavedItem);
+      localStorage.setItem(`explanations-${topic}`, JSON.stringify(savedExplanations));
+      setIsSaved(true);
+    }
+  };
+
   return (
     <Drawer
       anchor="right"
@@ -37,9 +69,12 @@ const SideWindow = ({
     >
       <Box sx={{ p: 3, height: '100%', overflowY: 'auto' }}>
         <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-          <Typography variant="h6" fontWeight="bold" gutterBottom sx={{ flexGrow: 1 }}>
+          <Typography fontWeight="bold" lineHeight={1.3} fontStyle="italic" gutterBottom sx={{ flexGrow: 1 }}>
             {title}
           </Typography>
+          <IconButton onClick={handleSave} sx={{ mr: 1 }}>
+            {isSaved ? <BookmarkIcon /> : <BookmarkBorderIcon />}
+          </IconButton>
           <IconButton onClick={onClose}>
             <CloseIcon />
           </IconButton>

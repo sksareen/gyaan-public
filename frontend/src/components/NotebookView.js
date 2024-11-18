@@ -9,8 +9,6 @@ import {
     Grid,
     Chip,
     IconButton,
-    Dialog,
-    DialogContent
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
@@ -21,8 +19,6 @@ import ViewModuleIcon from '@mui/icons-material/ViewModule';
 const NotebookView = () => {
     const [savedModules, setSavedModules] = React.useState([]);
     const navigate = useNavigate();
-    const [openMiniModule, setOpenMiniModule] = React.useState(false);
-    const [selectedModule, setSelectedModule] = React.useState(null);
     const [isListView, setIsListView] = useState(false);
 
     React.useEffect(() => {
@@ -43,9 +39,8 @@ const NotebookView = () => {
         });
     };
 
-    const handleOpenMiniModule = (module) => {
-        setSelectedModule(module);
-        setOpenMiniModule(true);
+    const handleOpenMiniModule = (moduleId) => {
+        navigate(`/mini-module/${moduleId}`);
     };
 
     const handleDeleteModule = (moduleId) => {
@@ -93,14 +88,25 @@ const NotebookView = () => {
                             minHeight: isListView ? 'auto' : '180px',
                             maxHeight: isListView ? '80px' : '180px',
                             height: isListView ? '80px' : 'auto',
+                            '&:hover': {
+                                cursor: 'pointer',
+                                boxShadow: 3
+                            }
                         }}>
-                            <CardContent sx={{ 
-                                flex: '1 0 auto',
-                                display: 'flex',
-                                flexDirection: isListView ? 'row' : 'column',
-                                alignItems: isListView ? 'center' : 'flex-start',
-                                padding: isListView ? '0' : '16px'
-                            }}>
+                            <CardContent 
+                                onClick={() => handleOpenMiniModule(module.id)}
+                                sx={{ 
+                                    flex: '1 0 auto',
+                                    display: 'flex',
+                                    flexDirection: isListView ? 'row' : 'column',
+                                    alignItems: isListView ? 'center' : 'flex-start',
+                                    padding: isListView ? '0' : '16px',
+                                    '&:last-child': { pb: 2 },
+                                    '&:hover': {
+                                        cursor: 'pointer'
+                                    }
+                                }}
+                            >
                                 <Box sx={{ flexGrow: 1 }}>
                                     <Typography variant="h6" gutterBottom>
                                         {module.topic}
@@ -154,7 +160,7 @@ const NotebookView = () => {
                                 <IconButton
                                     size="small"
                                     color="primary"
-                                    onClick={() => handleOpenMiniModule(module)}
+                                    onClick={() => handleOpenMiniModule(module.id)}
                                     aria-label="open mini module"
                                 >
                                     <OpenInNewIcon />
@@ -162,7 +168,10 @@ const NotebookView = () => {
                                 <IconButton
                                     size="small"
                                     color="error"
-                                    onClick={() => handleDeleteModule(module.id)}
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleDeleteModule(module.id);
+                                    }}
                                     aria-label="delete module"
                                 >
                                     <DeleteIcon />
@@ -172,27 +181,6 @@ const NotebookView = () => {
                     </Grid>
                 ))}
             </Grid>
-
-            <Dialog
-                open={openMiniModule}
-                onClose={() => setOpenMiniModule(false)}
-                maxWidth="md"
-                fullWidth
-            >
-                <DialogContent>
-                    {selectedModule && (
-                        <iframe
-                            src={`/mini-module/${selectedModule.id}`}
-                            style={{
-                                width: '100%',
-                                height: '80vh',
-                                border: 'none'
-                            }}
-                            title="Mini Module View"
-                        />
-                    )}
-                </DialogContent>
-            </Dialog>
         </Container>
     );
 };

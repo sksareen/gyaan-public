@@ -589,15 +589,32 @@ def explain_sentence():
         return jsonify({'error': 'Missing sentence or topic'}), 400
 
     try:
+        # Get the last conversation for this topic if it exists
+        conversation_history = []
+        if hasattr(client, 'last_conversation') and client.last_conversation.get('topic') == topic:
+            conversation_history = client.last_conversation.get('messages', [])
+
+        # Create the new message
+        messages = conversation_history + [{
+            "role": "user",
+            "content": f"""Explain '{sentence}' in the context of {topic}. Structure your response as a single paragraph under 150 words. Use simple english and key words. Get right to the answer, do not use  phrases like 'in the context of' or 'in relation to'.
+
+Make every word count - pack in meaning while maintaining readability."""
+        }]
+
         response = client.messages.create(
             model=SONNET_MODEL,
             max_tokens=1600,
-            messages=[{
-                "role": "user",
-                "content": f"Explain '{sentence}' concisely and precisely as it relates to {topic}. Use short sentences. Focus on key points. use simple english and key words. under 200 words"
-            }]
+            system="You are a knowledgeable expert who explains concepts clearly and concisely. Focus on making dense, information-rich explanations that highlight key terminology and relationships.",
+            messages=messages
         )
-        
+
+        # Store this conversation for future context
+        client.last_conversation = {
+            'topic': topic,
+            'messages': messages + [{"role": "assistant", "content": str(response.content)}]
+        }
+
         # Convert the response content to a string
         explanation = str(response.content)
         

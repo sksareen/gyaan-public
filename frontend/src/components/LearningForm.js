@@ -54,12 +54,14 @@ const LearningForm = ({ onSubmit }) => {
                         onChange={(e) => setTopic(e.target.value)}
                         margin="normal"
                         required
+                        sx={{ borderRadius: '15px' }}
                     />
                     <FormControl fullWidth margin="normal">
                         <InputLabel>Proficiency Level</InputLabel>
                         <Select
                             value={proficiency}
                             onChange={(e) => setProficiency(e.target.value)}
+                            sx={{ borderRadius: '10px' }}
                             label="Proficiency Level"
                         >
                             <MenuItem value="beginner">Beginner</MenuItem>
@@ -71,9 +73,15 @@ const LearningForm = ({ onSubmit }) => {
                     <Button
                         type="submit"
                         variant="contained"
-                        color="primary"
+                        sx={{ 
+                            borderRadius: '15px', 
+                            mt: 2,
+                            backgroundColor: '#00c464',
+                            '&:hover': {
+                                backgroundColor: '#00b058'
+                            }
+                        }}
                         fullWidth
-                        sx={{ mt: 2 }}
                         disabled={loading}
                     >
                         {loading ? 'Generating...' : 'Generate Learning Path'}

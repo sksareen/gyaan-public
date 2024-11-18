@@ -19,6 +19,8 @@ const MiniModuleView = () => {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [userQuestion, setUserQuestion] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
+  const [savedExplanations, setSavedExplanations] = useState([]);
+  const [selectedText, setSelectedText] = useState('');
 
   useEffect(() => {
     const fetchModule = async () => {
@@ -37,6 +39,13 @@ const MiniModuleView = () => {
     };
     fetchModule();
   }, [id]);
+
+  useEffect(() => {
+    if (moduleData?.topic) {
+      const saved = JSON.parse(localStorage.getItem(`explanations-${moduleData.topic}`) || '[]');
+      setSavedExplanations(saved);
+    }
+  }, [moduleData?.topic]);
 
   const components = {
     p: ({ children }) => (
@@ -122,6 +131,46 @@ const MiniModuleView = () => {
     }
   };
 
+  const renderSavedExplanations = () => {
+    if (savedExplanations.length === 0) return null;
+
+    return (
+      <Box sx={{ my: 4, p: 2, bgcolor: 'background.paper', borderRadius: 1 }}>
+        <Typography variant="h6" gutterBottom>
+          Saved Explanations
+        </Typography>
+        {savedExplanations.map((item, index) => (
+          <Paper 
+            key={index} 
+            sx={{ 
+              p: 2, 
+              mb: 2, 
+              cursor: 'pointer',
+              '&:hover': {
+                bgcolor: 'action.hover'
+              }
+            }} 
+            onClick={() => {
+              setUserQuestion(item.question);
+              handleExplanationReceived(item.content);
+              setSelectedText(item.selectedText);
+            }}
+          >
+            <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
+              {item.selectedText}
+            </Typography>
+            <Typography variant="body2" color="text.secondary" gutterBottom>
+              {item.question}
+            </Typography>
+            <Typography variant="caption" color="text.secondary">
+              Saved on: {new Date(item.timestamp).toLocaleDateString()}
+            </Typography>
+          </Paper>
+        ))}
+      </Box>
+    );
+  };
+
   if (loading) {
     return (
       <Container maxWidth="md">
@@ -176,6 +225,8 @@ const MiniModuleView = () => {
             </ReactMarkdown>
           </Box>
 
+          {renderSavedExplanations()}
+
           <Box sx={{ my: 4, p: 2, bgcolor: 'background.paper', borderRadius: 1 }}>
             <Typography variant="h6" gutterBottom>
               Ask a Question
@@ -192,13 +243,14 @@ const MiniModuleView = () => {
       <SideWindow
         open={isDrawerOpen}
         onClose={() => setIsDrawerOpen(false)}
-        title={`Digging deeper into: "${userQuestion}"`}
+        title={selectedText ? `"${selectedText}"` : 'Ask a question'}
         content={explanation}
         question={userQuestion}
         setQuestion={setUserQuestion}
         onQuestionSubmit={handleQuestionSubmit}
         isLoading={loading}
         isProcessing={isProcessing}
+        topic={moduleData?.topic}
       />
     </>
   );

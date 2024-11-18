@@ -36,3 +36,11 @@ const theme = createTheme({
 });
 
 export default theme;
+
+// Possible colors:
+// #69dc18
+// #00c464
+// #00a787
+// #008790
+// #00677e
+// #2f4858
