@@ -30,8 +30,13 @@ if missing_vars:
 # Initialize Flask app
 app = Flask(__name__)
 CORS(app, resources={
+    r"/api/*": {
+        "origins": ["http://localhost:3000"],
+        "methods": ["GET", "POST", "OPTIONS"],
+        "allow_headers": ["Content-Type"]
+    },
     r"/*": {
-        "origins": ["http://localhost:3000"],  # Your React app's URL
+        "origins": ["http://localhost:3000"],
         "methods": ["GET", "POST", "OPTIONS"],
         "allow_headers": ["Content-Type"]
     }
@@ -612,6 +617,7 @@ def explain_sentence():
 def generate_learning_cards():
     try:
         data = request.get_json()
+        print("Received data:", data)
         topic = data.get('topic')
         proficiency = data.get('proficiency')
         

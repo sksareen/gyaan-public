@@ -1,5 +1,12 @@
 import axios from 'axios';
 
+const api = axios.create({
+    baseURL: 'http://localhost:5001',
+    headers: {
+        'Content-Type': 'application/json'
+    }
+});
+
 export const generateGoals = async (topic, proficiency) => {
     try {
         const response = await axios.post('/generate_goals', {
@@ -71,7 +78,7 @@ export const explainSentence = async (sentence, topic) => {
 
 export const generateLearningCards = async (topic, proficiency) => {
     try {
-        const response = await axios.post('/api/generate_learning_cards', {
+        const response = await api.post('/api/generate_learning_cards', {
             topic,
             proficiency
         });

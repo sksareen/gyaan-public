@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Card, CardContent, Typography, Box } from '@mui/material';
+import { Card, CardContent, Typography, Box, Chip } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import { generateMiniModule } from '../services/api';
 
@@ -61,7 +61,7 @@ const LearningCard = ({ title, description, type, setMiniModuleLoading }) => {
         </Typography>
         <Box sx={{ mt: 2 }}>
           <Typography variant="caption" color="text.secondary">
-            {type}
+            <Chip label={type} variant="outlined" />
           </Typography>
         </Box>
       </CardContent>

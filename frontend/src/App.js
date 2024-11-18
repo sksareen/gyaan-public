@@ -76,6 +76,7 @@ function App() {
         setLoadingType('module');
         try {
             const moduleResponse = await generateModuleContent(currentTopic, goals, currentProficiency);
+            console.log('Module Response:', moduleResponse);
             setModuleData(moduleResponse);
             const moduleId = saveModule(moduleResponse);
             setShowConfirmButton(false);

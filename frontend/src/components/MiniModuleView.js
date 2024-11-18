@@ -1,22 +1,24 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Container, Typography, Box, Button, CircularProgress, TextField, Paper, IconButton, Drawer } from '@mui/material';
+import { Container, Typography, Box, Button, CircularProgress, Paper, IconButton } from '@mui/material';
 import ReactMarkdown from 'react-markdown';
 import InteractiveText from './InteractiveText';
-import SendIcon from '@mui/icons-material/Send';
 import CloseIcon from '@mui/icons-material/Close';
 import { explainSentence } from '../services/api';
 import { formatMarkdownText } from '../utils/textFormatting';
 import remarkGfm from 'remark-gfm';
+import QuestionPanel from './QuestionPanel';
+import SideWindow from './SideWindow';
 
 const MiniModuleView = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [moduleData, setModuleData] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [userQuestion, setUserQuestion] = useState('');
   const [explanation, setExplanation] = useState('');
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [userQuestion, setUserQuestion] = useState('');
+  const [isProcessing, setIsProcessing] = useState(false);
 
   useEffect(() => {
     const fetchModule = async () => {
@@ -101,23 +103,23 @@ const MiniModuleView = () => {
     ),
   };
 
-  const handleExplainSentence = async () => {
-    try {
-        setIsDrawerOpen(true);
-        const data = await explainSentence(userQuestion, moduleData?.topic || '');
-        if (data.explanation) {
-            const formattedExplanation = formatMarkdownText(data.explanation);
-            setExplanation(formattedExplanation);
-        }
-    } catch (error) {
-        console.error('Error getting explanation:', error);
-        setExplanation('Sorry, there was an error getting the explanation. Please try again.');
-    }
+  const handleExplanationReceived = (newExplanation) => {
+    setExplanation(newExplanation);
+    setIsDrawerOpen(true);
   };
 
-  const handleDrawerClose = () => {
-    setIsDrawerOpen(false);
-    setExplanation('');
+  const handleQuestionSubmit = async () => {
+    if (!userQuestion.trim()) return;
+    
+    setIsProcessing(true);
+    try {
+      const explanation = await explainSentence(userQuestion, moduleData?.topic);
+      handleExplanationReceived(formatMarkdownText(explanation.explanation));
+    } catch (error) {
+      handleExplanationReceived('Sorry, there was an error getting the explanation.');
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   if (loading) {
@@ -137,8 +139,6 @@ const MiniModuleView = () => {
       </Container>
     );
   }
-
-  // console.log('Content before rendering:', formatMarkdownText(moduleData.content.description));
 
   return (
     <>
@@ -180,60 +180,26 @@ const MiniModuleView = () => {
             <Typography variant="h6" gutterBottom>
               Ask a Question
             </Typography>
-            <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
-              <TextField
-                fullWidth
-                label="Ask about anything in this module"
-                value={userQuestion}
-                onChange={(e) => setUserQuestion(e.target.value)}
-                variant="outlined"
-                size="medium"
-              />
-              <IconButton 
-                color="primary"
-                onClick={handleExplainSentence}
-                disabled={!userQuestion.trim()}
-                sx={{ p: '10px' }}
-              >
-                <SendIcon />
-              </IconButton>
-            </Box>
+            <QuestionPanel 
+              topic={moduleData?.topic} 
+              onExplanationReceived={handleExplanationReceived}
+            />
           </Box>
 
         </Box>
       </Container>
       
-      <Drawer
-        anchor="right"
+      <SideWindow
         open={isDrawerOpen}
-        onClose={handleDrawerClose}
-        sx={{
-          '& .MuiDrawer-paper': {
-            width: '40%',
-            minWidth: 350,
-            maxWidth: 600,
-            p: 2,
-            right: 0,
-          }
-        }}
-      >
-        <Box sx={{ position: 'relative', height: '100%' }}>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-            <Typography variant="h6" fontWeight={600}>{userQuestion}</Typography>
-            <IconButton onClick={handleDrawerClose}>
-              <CloseIcon />
-            </IconButton>
-          </Box>
-          
-          <ReactMarkdown
-            components={components}
-            remarkPlugins={[remarkGfm]}
-          >
-            {formatMarkdownText(explanation)}
-          </ReactMarkdown>
-          
-        </Box>
-      </Drawer>
+        onClose={() => setIsDrawerOpen(false)}
+        title={`Digging deeper into: "${userQuestion}"`}
+        content={explanation}
+        question={userQuestion}
+        setQuestion={setUserQuestion}
+        onQuestionSubmit={handleQuestionSubmit}
+        isLoading={loading}
+        isProcessing={isProcessing}
+      />
     </>
   );
 };

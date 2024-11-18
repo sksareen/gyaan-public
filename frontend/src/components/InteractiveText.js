@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Drawer, Typography, CircularProgress, TextField, Button } from '@mui/material';
+
+import { Box } from '@mui/material';
 import { explainSentence } from '../services/api';
 import { formatMarkdownText } from '../utils/textFormatting';
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
+import SideWindow from './SideWindow';
 
 const InteractiveText = ({ children, topic, level = 0 }) => {
   const [selectedText, setSelectedText] = useState(null);
@@ -11,16 +11,17 @@ const InteractiveText = ({ children, topic, level = 0 }) => {
   const [explanation, setExplanation] = useState('');
   const [loading, setLoading] = useState(false);
   const [processedText, setProcessedText] = useState([]);
-  const [question, setQuestion] = useState('');
-  const [isExplaining, setIsExplaining] = useState(false);
   const [isShiftPressed, setIsShiftPressed] = useState(false);
+  const [userQuestion, setUserQuestion] = useState('');
+  const [isProcessing, setIsProcessing] = useState(false);
+
+  const effectiveTopic = topic || 'default topic';
 
   useEffect(() => {
     const text = children?.toString() || '';
-    setProcessedText(text.split(/(?<=\.|\?|\!)(?:\s+|\n)/m).filter(s => s.trim()));
+    setProcessedText(text.split(/(?<=\.|\?|\!|\:|\-)(?:\s+|\n)/m ).filter(s => s.trim()));
   }, [children]);
 
-  // Add shift key detection
   useEffect(() => {
     const handleKeyDown = (e) => setIsShiftPressed(e.shiftKey);
     const handleKeyUp = (e) => setIsShiftPressed(false);
@@ -35,8 +36,10 @@ const InteractiveText = ({ children, topic, level = 0 }) => {
   }, []);
 
   const fetchExplanation = async (text) => {
-    if (!topic) throw new Error('Topic is required');
-    const data = await explainSentence(text, topic);
+    if (!effectiveTopic) {
+      throw new Error('Cannot explain text: topic prop is missing');
+    }
+    const data = await explainSentence(text, effectiveTopic);
     return formatMarkdownText(data.explanation);
   };
 
@@ -45,10 +48,8 @@ const InteractiveText = ({ children, topic, level = 0 }) => {
     
     let finalText = text;
     if (event.shiftKey) {
-      // Get the word under the cursor when shift is pressed
       const range = document.caretRangeFromPoint(event.clientX, event.clientY);
       if (range) {
-        // Expand selection to word boundaries
         range.expand('word');
         finalText = range.toString().trim();
       }
@@ -72,43 +73,18 @@ const InteractiveText = ({ children, topic, level = 0 }) => {
   };
 
   const handleQuestionSubmit = async () => {
-    if (!question.trim()) return;
+    if (!userQuestion.trim()) return;
     
-    setIsExplaining(true);
+    setIsProcessing(true);
+    setSelectedText(userQuestion);
     try {
-      const explanation = await fetchExplanation(question);
-      setExplanation(explanation);
+      const explanation = await explainSentence(userQuestion, effectiveTopic);
+      setExplanation(formatMarkdownText(explanation.explanation));
     } catch (error) {
       setExplanation('Sorry, there was an error getting the explanation.');
     } finally {
-      setIsExplaining(false);
+      setIsProcessing(false);
     }
-  };
-
-  // Simplified markdown components
-  const markdownComponents = {
-    p: ({ children }) => (
-      <Typography paragraph>
-        <InteractiveText topic={topic} level={level + 1}>{children}</InteractiveText>
-      </Typography>
-    ),
-    li: ({ children }) => (
-      <Typography component="li" sx={{ mb: 1 }}>
-        <InteractiveText topic={topic} level={level + 1}>{children}</InteractiveText>
-      </Typography>
-    ),
-    strong: ({ children }) => (
-      <Box component="strong" sx={{ fontWeight: 'bold' }}>
-        <InteractiveText topic={topic} level={level + 1}>{children}</InteractiveText>
-      </Box>
-    ),
-  };
-
-  const resetPanel = () => {
-    setIsSidePanelOpen(false);
-    setSelectedText(null);
-    setExplanation('');
-    setQuestion('');
   };
 
   return (
@@ -155,63 +131,23 @@ const InteractiveText = ({ children, topic, level = 0 }) => {
         </Box>
       ))}
 
-      <Drawer
-        anchor="right"
+      <SideWindow
         open={isSidePanelOpen}
-        onClose={resetPanel}
-        sx={{
-          '& .MuiDrawer-paper': {
-            width: '10%',
-            minWidth: 350,
-            maxWidth: 600,
-            right: `${level * 7}%`,
-            p: 2,
-            borderRight: '4px solid #000',
-          },
+        onClose={() => {
+          setIsSidePanelOpen(false);
+          setSelectedText(null);
+          setUserQuestion('');
         }}
-      >
-        <Box sx={{ p: 3 }}>
-          {selectedText && (
-            <>
-              <Typography variant="h6" gutterBottom>
-                {selectedText}
-              </Typography>
-              
-              {loading ? (
-                <Box sx={{ display: 'flex', justifyContent: 'center', my: 2 }}>
-                  <CircularProgress />
-                </Box>
-              ) : (
-                <Box sx={{ my: 2 }}>
-                  <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>
-                    {explanation}
-                  </ReactMarkdown>
-                </Box>
-              )}
-
-              <Box sx={{ mt: 4 }}>
-                <TextField
-                  fullWidth
-                  variant="outlined"
-                  label="Ask a question"
-                  value={question}
-                  onChange={(e) => setQuestion(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && handleQuestionSubmit()}
-                  sx={{ mb: 2 }}
-                />
-                <Button
-                  variant="contained"
-                  onClick={handleQuestionSubmit}
-                  disabled={isExplaining || !question.trim()}
-                  endIcon={isExplaining ? <CircularProgress size={20} /> : null}
-                >
-                  Ask
-                </Button>
-              </Box>
-            </>
-          )}
-        </Box>
-      </Drawer>
+        title={selectedText ? `Digging deeper into: "${selectedText}"` : 'Ask a question'}
+        content={explanation}
+        question={userQuestion}
+        setQuestion={setUserQuestion}
+        onQuestionSubmit={handleQuestionSubmit}
+        isLoading={loading}
+        isProcessing={isProcessing}
+        level={level}
+        topic={effectiveTopic}
+      />
     </Box>
   );
 };
