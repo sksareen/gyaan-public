@@ -82,7 +82,7 @@ const Navigation = () => {
                             color: theme.palette.primary.main
                         }}
                     >
-                        + New
+                        + Create
                     </Button>
                 </Box>
             </Toolbar>

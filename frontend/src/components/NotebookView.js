@@ -92,7 +92,8 @@ const NotebookView = () => {
                             minHeight: isListView ? 'auto' : '180px',
                             maxHeight: isListView ? '80px' : '180px',
                             height: isListView ? '80px' : 'auto',
-                            borderRadius: 3,
+                            borderRadius: 2,
+                            boxShadow: 2,
                             '&:hover': {
                                 transition: 'all 0.2s ease-in-out',
                                 transform: 'translateY(-2px)',
