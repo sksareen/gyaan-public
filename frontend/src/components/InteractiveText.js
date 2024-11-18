@@ -5,6 +5,12 @@ import { explainSentence } from '../services/api';
 import { formatMarkdownText } from '../utils/textFormatting';
 import SideWindow from './SideWindow';
 
+// Function to split text into sentences
+const splitTextIntoSentences = (text) => {
+  // Regex to split text into sentences
+  return text.match(/[^.!?\s][^.!?]*[.!?]?[\)"']?\s*/g);
+};
+
 const InteractiveText = ({ children, topic, level = 0 }) => {
   const [selectedText, setSelectedText] = useState('');
   const [isSidePanelOpen, setIsSidePanelOpen] = useState(false);
@@ -13,40 +19,55 @@ const InteractiveText = ({ children, topic, level = 0 }) => {
   const [userQuestion, setUserQuestion] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [showAskButton, setShowAskButton] = useState(false);
+  const [buttonPosition, setButtonPosition] = useState({ top: 0, left: 0 });
+  const [isShiftPressed, setIsShiftPressed] = useState(false);
+  const [hoveredSentenceIndex, setHoveredSentenceIndex] = useState(null);
 
   const effectiveTopic = topic || 'default topic';
 
   // Function to handle text selection
-  const handleMouseUp = () => {
+  const handleMouseUp = (event) => {
     const selection = window.getSelection();
     const selectedText = selection.toString().trim();
     if (selectedText) {
       setSelectedText(selectedText);
       setShowAskButton(true);
+      const range = selection.getRangeAt(0);
+      const rect = range.getBoundingClientRect();
+      setButtonPosition({ top: rect.bottom + window.scrollY, left: rect.left + window.scrollX });
     } else {
       setShowAskButton(false);
     }
   };
 
   // Function to handle key presses
-  const handleKeyPress = (e) => {
-    if (e.key === 'Enter' && selectedText) {
-      setUserQuestion(selectedText);
-      handleQuestionSubmit();
+  const handleKeyDown = (e) => {
+    if (e.key === 'Shift') {
+      setIsShiftPressed(true);
+    }
+  };
+
+  const handleKeyUp = (e) => {
+    if (e.key === 'Shift') {
+      setIsShiftPressed(false);
+      setHoveredSentenceIndex(null);
+    }
+    if (e.key === 'Enter' && selectedText && !isSidePanelOpen) {
+      e.preventDefault();
+      handleAskAboutSelection();
     }
   };
 
   useEffect(() => {
-    // Add event listeners for mouseup and keydown
-    document.addEventListener('mouseup', handleMouseUp);
-    document.addEventListener('keydown', handleKeyPress);
+    // Add key event listeners once on component mount
+    document.addEventListener('keydown', handleKeyDown);
+    document.addEventListener('keyup', handleKeyUp);
 
-    // Clean up event listeners on unmount
     return () => {
-      document.removeEventListener('mouseup', handleMouseUp);
-      document.removeEventListener('keydown', handleKeyPress);
+      document.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener('keyup', handleKeyUp);
     };
-  }, [selectedText]);
+  }, []); // Empty dependency array
 
   const fetchExplanation = async (text) => {
     if (!effectiveTopic) {
@@ -56,16 +77,16 @@ const InteractiveText = ({ children, topic, level = 0 }) => {
     return formatMarkdownText(data.explanation);
   };
 
-  const handleAskAboutSelection = async () => {
-    if (!selectedText.trim()) return;
-    
+  const handleAskAboutSelection = async (text = selectedText) => {
+    if (!text.trim()) return;
+
     setIsSidePanelOpen(true);
     setLoading(true);
-    
+    setUserQuestion(''); // Clear previous question
+
     try {
-      const explanation = await fetchExplanation(selectedText);
+      const explanation = await fetchExplanation(text);
       setExplanation(explanation);
-      setUserQuestion(selectedText);
     } catch (error) {
       console.error('Error:', error);
       setExplanation('Failed to fetch explanation. Please try again.');
@@ -77,7 +98,7 @@ const InteractiveText = ({ children, topic, level = 0 }) => {
 
   const handleQuestionSubmit = async () => {
     if (!userQuestion.trim()) return;
-    
+
     setIsProcessing(true);
     setSelectedText(userQuestion);
     try {
@@ -92,20 +113,60 @@ const InteractiveText = ({ children, topic, level = 0 }) => {
     }
   };
 
+  // Handle sentence click
+  const handleSentenceClick = async (sentence) => {
+    if (isShiftPressed) {
+      setSelectedText(sentence.trim());
+      await handleAskAboutSelection(sentence.trim());
+    }
+  };
+
+  const renderTextWithSentences = (text) => {
+    const sentences = splitTextIntoSentences(text);
+    return sentences.map((sentence, index) => (
+      <span
+        key={index}
+        onClick={() => handleSentenceClick(sentence)}
+        onMouseEnter={() => isShiftPressed && setHoveredSentenceIndex(index)}
+        onMouseLeave={() => setHoveredSentenceIndex(null)}
+        style={{
+          backgroundColor: isShiftPressed && hoveredSentenceIndex === index ? 'rgba(0, 0, 255, 0.1)' : 'transparent',
+          cursor: isShiftPressed ? 'pointer' : 'default',
+        }}
+      >
+        {sentence}
+      </span>
+    ));
+  };
+
   return (
-    <Box component="span" onMouseUp={handleMouseUp}>
-      {children}
-      
+    <Box
+      component="span"
+      onMouseUp={handleMouseUp}
+      style={{ cursor: isShiftPressed ? 'pointer' : 'default' }}
+    >
+      {typeof children === 'string'
+        ? renderTextWithSentences(children)
+        : React.Children.map(children, (child) => {
+            if (typeof child === 'string') {
+              return renderTextWithSentences(child);
+            } else {
+              return child;
+            }
+          })
+      }
+
       {showAskButton && (
         <Button
           variant="contained"
           size="small"
           startIcon={<HelpOutlineIcon />}
-          onClick={handleAskAboutSelection}
+          onClick={() => handleAskAboutSelection()}
           sx={{
             position: 'fixed',
-            bottom: '100px',
-            right: '40px',
+            top: `${buttonPosition.top}px`,
+            left: `${buttonPosition.left}px`,
+            transform: 'translateY(8px)', // Small offset from the text
             zIndex: 1000,
             backgroundColor: 'primary.main',
             '&:hover': {
