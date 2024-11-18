@@ -8,11 +8,12 @@ import SideWindow from './SideWindow';
 // Function to split text into sentences
 const splitTextIntoSentences = (text) => {
   // Regex to split text into sentences
-  return text.match(/[^.!?\s][^.!?]*[.!?]?[\)"']?\s*/g);
+  return text.match(/[^.!?]*[.!?]/g) || [text];
 };
 
 const InteractiveText = ({ children, topic, level = 0 }) => {
   const [selectedText, setSelectedText] = useState('');
+  const [explainedText, setExplainedText] = useState('');
   const [isSidePanelOpen, setIsSidePanelOpen] = useState(false);
   const [explanation, setExplanation] = useState('');
   const [loading, setLoading] = useState(false);
@@ -27,17 +28,21 @@ const InteractiveText = ({ children, topic, level = 0 }) => {
 
   // Function to handle text selection
   const handleMouseUp = (event) => {
-    const selection = window.getSelection();
-    const selectedText = selection.toString().trim();
-    if (selectedText) {
-      setSelectedText(selectedText);
-      setShowAskButton(true);
-      const range = selection.getRangeAt(0);
-      const rect = range.getBoundingClientRect();
-      setButtonPosition({ top: rect.bottom + window.scrollY, left: rect.left + window.scrollX });
-    } else {
-      setShowAskButton(false);
-    }
+    // Delay execution to ensure selection is updated
+    setTimeout(() => {
+      const selection = window.getSelection();
+      const selectedText = selection.toString().trim();
+      if (selectedText) {
+        setSelectedText(selectedText);
+        setShowAskButton(true);
+        const range = selection.getRangeAt(0);
+        const rect = range.getBoundingClientRect();
+        setButtonPosition({ top: rect.bottom + window.scrollY, left: rect.left + window.scrollX });
+      } else {
+        setSelectedText('');
+        setShowAskButton(false);
+      }
+    }, 0);
   };
 
   // Function to handle key presses
@@ -59,19 +64,22 @@ const InteractiveText = ({ children, topic, level = 0 }) => {
   };
 
   useEffect(() => {
-    // Add key event listeners once on component mount
+    // Add event listeners once on component mount
+    document.addEventListener('mouseup', handleMouseUp);
     document.addEventListener('keydown', handleKeyDown);
     document.addEventListener('keyup', handleKeyUp);
 
     return () => {
+      // Clean up event listeners on component unmount
+      document.removeEventListener('mouseup', handleMouseUp);
       document.removeEventListener('keydown', handleKeyDown);
       document.removeEventListener('keyup', handleKeyUp);
     };
-  }, []); // Empty dependency array
+  }, []); // Empty dependency array to run only once
 
   const fetchExplanation = async (text) => {
     if (!effectiveTopic) {
-      throw new Error('Cannot explain text: topic prop is missing');
+      throw new Error('Cannot explain text: topic prop is missing.');
     }
     const data = await explainSentence(text, effectiveTopic);
     return formatMarkdownText(data.explanation);
@@ -80,6 +88,7 @@ const InteractiveText = ({ children, topic, level = 0 }) => {
   const handleAskAboutSelection = async (text = selectedText) => {
     if (!text.trim()) return;
 
+    setExplainedText(text.trim());
     setIsSidePanelOpen(true);
     setLoading(true);
     setUserQuestion(''); // Clear previous question
@@ -93,6 +102,9 @@ const InteractiveText = ({ children, topic, level = 0 }) => {
     } finally {
       setLoading(false);
       setShowAskButton(false);
+      // Clear the text selection
+      window.getSelection().removeAllRanges();
+      setSelectedText('');
     }
   };
 
@@ -101,6 +113,7 @@ const InteractiveText = ({ children, topic, level = 0 }) => {
 
     setIsProcessing(true);
     setSelectedText(userQuestion);
+    setExplainedText(userQuestion.trim());
     try {
       const explanation = await explainSentence(userQuestion, effectiveTopic);
       setExplanation(formatMarkdownText(explanation.explanation));
@@ -118,6 +131,9 @@ const InteractiveText = ({ children, topic, level = 0 }) => {
     if (isShiftPressed) {
       setSelectedText(sentence.trim());
       await handleAskAboutSelection(sentence.trim());
+
+      // Clear the text selection
+      window.getSelection().removeAllRanges();
     }
   };
 
@@ -130,7 +146,8 @@ const InteractiveText = ({ children, topic, level = 0 }) => {
         onMouseEnter={() => isShiftPressed && setHoveredSentenceIndex(index)}
         onMouseLeave={() => setHoveredSentenceIndex(null)}
         style={{
-          backgroundColor: isShiftPressed && hoveredSentenceIndex === index ? 'rgba(0, 0, 255, 0.1)' : 'transparent',
+          backgroundColor:
+            isShiftPressed && hoveredSentenceIndex === index ? 'rgba(0, 0, 255, 0.1)' : 'transparent',
           cursor: isShiftPressed ? 'pointer' : 'default',
         }}
       >
@@ -142,7 +159,6 @@ const InteractiveText = ({ children, topic, level = 0 }) => {
   return (
     <Box
       component="span"
-      onMouseUp={handleMouseUp}
       style={{ cursor: isShiftPressed ? 'pointer' : 'default' }}
     >
       {typeof children === 'string'
@@ -153,8 +169,7 @@ const InteractiveText = ({ children, topic, level = 0 }) => {
             } else {
               return child;
             }
-          })
-      }
+          })}
 
       {showAskButton && (
         <Button
@@ -184,8 +199,10 @@ const InteractiveText = ({ children, topic, level = 0 }) => {
           setIsSidePanelOpen(false);
           setSelectedText('');
           setUserQuestion('');
+          // Clear the text selection
+          window.getSelection().removeAllRanges();
         }}
-        title={selectedText ? `Digging deeper into: "${selectedText}"` : 'Ask a question'}
+        title={explainedText ? `Digging deeper into: "${explainedText}"` : 'Ask a question'}
         content={explanation}
         question={userQuestion}
         setQuestion={setUserQuestion}
