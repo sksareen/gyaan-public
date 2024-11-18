@@ -66,7 +66,11 @@ const NotebookView = () => {
                     color="primary" 
                     sx={{ 
                         marginLeft: 'auto', 
-                        boxShadow: 2 
+                        boxShadow: 2,
+                        '&:hover': {
+                            transform: 'translateY(-2px)',
+                            transition: 'all 0.2s ease-in-out'
+                        }
                     }}
                 >
                     {isListView ? <ViewModuleIcon /> : <ViewListIcon />}
@@ -88,8 +92,10 @@ const NotebookView = () => {
                             minHeight: isListView ? 'auto' : '180px',
                             maxHeight: isListView ? '80px' : '180px',
                             height: isListView ? '80px' : 'auto',
+                            borderRadius: 3,
                             '&:hover': {
-
+                                transition: 'all 0.2s ease-in-out',
+                                transform: 'translateY(-2px)',
                                 boxShadow: 3
                             }
                         }}>
@@ -100,7 +106,7 @@ const NotebookView = () => {
                                     display: 'flex',
                                     flexDirection: isListView ? 'row' : 'column',
                                     alignItems: isListView ? 'center' : 'flex-start',
-                                    padding: isListView ? '0' : '16px',
+                                    padding: isListView ? '0' : '12px',
                                     '&:last-child': { pb: 2 },
                                     '&:hover': {
                                         cursor: 'pointer'
@@ -108,53 +114,18 @@ const NotebookView = () => {
                                 }}
                             >
                                 <Box sx={{ flexGrow: 1 }}>
-                                    <Typography variant="h6" gutterBottom>
+                                    <Typography variant="h6" paddingBottom={0} marginBottom={0} lineHeight={1.2}>
                                         {module.topic}
                                     </Typography>
-                                    {/* <Chip 
-                                        label={module.proficiency} 
-                                        color="primary" 
-                                        size="small" 
-                                        sx={{ mr: 2 }}
-                                    /> */}
-                                    <Typography color="textSecondary" variant="body2">
-                                        Started: {formatDate(module.createdAt)}
+                                    <Typography color="textSecondary" variant="body2" paddingBottom={0} marginTop={1.5}>
+                                        From: {formatDate(module.createdAt)}
                                     </Typography>
-                                    {/* Only show goals in grid view */}
-                                    {/* {!isListView && module.selectedGoals && (
-                                        <>
-                                            <Typography variant="subtitle1" gutterBottom sx={{ mt: 2 }}>
-                                                Selected Goals:
-                                            </Typography>
-                                            <Box sx={{ pl: 2 }}>
-                                                {module.selectedGoals.map((goal, index) => (
-                                                    <Typography 
-                                                        key={index} 
-                                                        variant="body2" 
-                                                        sx={{ 
-                                                            mb: 1,
-                                                            display: 'flex',
-                                                            alignItems: 'center',
-                                                            '&:before': {
-                                                                content: '"•"',
-                                                                marginRight: '8px',
-                                                                color: 'primary.main',
-                                                                fontSize: '1.2em'
-                                                            }
-                                                        }}
-                                                    >
-                                                        {goal}
-                                                    </Typography>
-                                                ))}
-                                            </Box>
-                                        </>
-                                    )} */}
                                 </Box>
                             </CardContent>
                             <CardActions sx={{ 
                                 display: 'flex',
                                 flexDirection: 'row',
-                                padding: isListView ? '0' : '16px',
+                                padding: isListView ? '0' : '12px',
                                 alignSelf: 'center'
                             }}>
                                 <IconButton
