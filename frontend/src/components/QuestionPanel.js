@@ -3,52 +3,94 @@ import { Box, Typography, CircularProgress, TextField, Button } from '@mui/mater
 import { explainSentence } from '../services/api';
 import { formatMarkdownText } from '../utils/textFormatting';
 import theme from './Theme';
+import SideWindow from './SideWindow';
 
-const QuestionPanel = ({ topic, onExplanationReceived }) => {
+const QuestionPanel = ({ topic, onExplanationReceived, questions = [], level }) => {
   const [question, setQuestion] = useState('');
   const [isExplaining, setIsExplaining] = useState(false);
+  const [childWindow, setChildWindow] = useState(null);
 
-  const handleQuestionSubmit = async () => {
-    if (!question.trim()) return;
+  const handleQuestionSubmit = async (questionText = question) => {
+    if (!questionText.trim()) return;
     
     setIsExplaining(true);
     try {
-      const explanation = await explainSentence(question, topic);
-      onExplanationReceived(formatMarkdownText(explanation.explanation));
+      const explanation = await explainSentence(questionText, topic);
+      setChildWindow(
+        <SideWindow
+          open={true}
+          onClose={() => setChildWindow(null)}
+          title={questionText}
+          content={explanation.explanation}
+          topic={topic}
+          level={(level || 0) + 1}
+        />
+      );
+      if (questionText === question) {
+        setQuestion('');
+      }
     } catch (error) {
-      onExplanationReceived('Sorry, there was an error getting the explanation.');
+      console.error('Error:', error);
     } finally {
       setIsExplaining(false);
     }
   };
 
   return (
-    <Box sx={{ mt: 4 }}>
-      <Box sx={{ display: 'flex', gap: 1 }}>
-        <TextField
-          fullWidth
-          variant="outlined"
-          label="Ask a question"
-          value={question}
-          onChange={(e) => setQuestion(e.target.value)}
-          onKeyPress={(e) => e.key === 'Enter' && handleQuestionSubmit()}
-        />
-        <Button
-          variant="contained"
-          onClick={handleQuestionSubmit}
-          disabled={isExplaining || !question.trim()}
-          endIcon={isExplaining ? <CircularProgress size={20} /> : null}
+    <Box sx={{ mt: 4, position: 'relative' }}>
+      {isExplaining && (
+        <Box
           sx={{
-            backgroundColor: theme.palette.primary.main,
-            color: theme.palette.background.main,
-            '&:hover': {
-              backgroundColor: theme.palette.secondary.main,
-            }
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            backgroundColor: 'rgba(255, 255, 255, 0.8)',
+            zIndex: 1,
           }}
         >
-          Ask
-        </Button>
-      </Box>
+          <CircularProgress />
+        </Box>
+      )}
+      {questions.length > 0 && (
+        <Box sx={{ mb: 3 }}>
+          <Typography variant="h6" gutterBottom>
+            Suggested Questions
+          </Typography>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+            {questions.map((questionText, index) => (
+              <Button
+                key={index}
+                variant="outlined"
+                onClick={() => handleQuestionSubmit(questionText)}
+                disabled={isExplaining}
+                sx={{
+                  justifyContent: 'flex-start',
+                  textAlign: 'left',
+                  textTransform: 'none',
+                  borderColor: theme.palette.primary.light,
+                  color: theme.palette.text.primary,
+                  margin: '1px',
+                  borderRadius: '12px',
+                  fontWeight: '600',
+                  color: theme.palette.primary.secondary,
+                  '&:hover': {
+                    backgroundColor: theme.palette.primary.light,
+                    color: theme.palette.background.paper,
+                  }
+                }}
+              >
+                {questionText}
+              </Button>
+            ))}
+          </Box>
+        </Box>
+      )}
+      {childWindow}
     </Box>
   );
 };

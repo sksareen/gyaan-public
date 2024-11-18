@@ -6,10 +6,12 @@ import os
 from dotenv import load_dotenv
 from datetime import datetime
 import json
+import re
 import logging
 from functools import wraps
 import time
 from utils import validate_request, parse_goals, parse_markdown_content
+from anthropic import Anthropic, HUMAN_PROMPT, AI_PROMPT
 
 # Configure logging
 logging.basicConfig(
@@ -30,11 +32,6 @@ if missing_vars:
 # Initialize Flask app
 app = Flask(__name__)
 CORS(app, resources={
-    r"/api/*": {
-        "origins": ["http://localhost:3000"],
-        "methods": ["GET", "POST", "OPTIONS"],
-        "allow_headers": ["Content-Type"]
-    },
     r"/*": {
         "origins": ["http://localhost:3000"],
         "methods": ["GET", "POST", "OPTIONS"],
@@ -576,7 +573,7 @@ def add_header(response):
         response.headers['Cache-Control'] = 'no-store'
     return response
 
-@app.route('/api/explain-sentence', methods=['POST', 'OPTIONS'])
+@app.route('/explain-sentence', methods=['POST', 'OPTIONS'])
 def explain_sentence():
     if request.method == 'OPTIONS':
         return '', 204
@@ -597,7 +594,7 @@ def explain_sentence():
         # Create the new message
         messages = conversation_history + [{
             "role": "user",
-            "content": f"""Explain '{sentence}' in the context of {topic}. Structure your response as a single paragraph under 20 words. Use simple english and key words. Get right to the answer, do not use  phrases like 'in the context of' or 'in relation to'.
+            "content": f"""Explain '{sentence}' in the context of {topic}. Structure your response as a single paragraph under 70 words. Use simple english and key words. Get right to the answer, do not use  phrases like 'in the context of' or 'in relation to'.
 
 Make every word count - pack in meaning while maintaining readability."""
         }]
@@ -802,6 +799,7 @@ def get_mini_module(id):
     time.sleep(1)  # Remove this in production
     # Rest of your endpoint logic...
 
+@app.route('/generate_questions', methods=['POST'])
 @app.route('/api/generate_questions', methods=['POST'])
 def generate_questions():
     data = request.get_json()
@@ -811,12 +809,12 @@ def generate_questions():
         return jsonify({'error': 'Missing text'}), 400
 
     try:
-        # Generate questions using the AI model
-        prompt = f"""Based on the following text, generate 3 simple comprehension questions that could be used to test understanding:
+        # Construct the instruction
+        instructions = f"""Based on the following text, generate 3 simple comprehension questions that could be used to test understanding:
 
 {text}
 
-Provide the questions as a JSON array in the following format:
+Provide **only** the JSON response in the following format and nothing else:
 
 {{
   "questions": [
@@ -824,32 +822,62 @@ Provide the questions as a JSON array in the following format:
     "Question 2",
     "Question 3"
   ]
-}}"""
+}}
 
+Ensure that:
+- All property names and string values are enclosed in double quotes.
+- There is no additional text, explanation, or code formatting.
+- The JSON is valid and can be parsed by standard JSON parsers.
+
+Do not include any extra text before or after the JSON object."""
+
+        # Create message using the new API syntax
         message = client.messages.create(
-            model=SONNET_MODEL,
+            model=HAIKU_MODEL,
             max_tokens=500,
-            system=SYSTEM_PROMPT,
-            messages=[{
-                "role": "user",
-                "content": prompt
-            }]
+            temperature=0,
+            messages=[
+                {
+                    "role": "user",
+                    "content": instructions
+                }
+            ]
         )
 
-        # Parse the response
-        response_content = str(message.content).strip()
+        # Extract the response content
+        response_content = message.content[0].text
 
-        # Remove any TextBlock formatting if present
-        if 'TextBlock' in response_content:
+        # Debug: Log the AI's raw response
+        print("[DEBUG] AI response content:")
+        print(response_content)
+
+        try:
+            # Try to parse the JSON directly first
+            questions_data = json.loads(response_content)
+            return jsonify(questions_data)
+        except json.JSONDecodeError:
+            # If direct parsing fails, try to extract JSON using regex
             import re
-            text_match = re.search(r"text='([\s\S]*?)'", response_content, re.DOTALL)
-            if text_match:
-                response_content = text_match.group(1)
-
-        # Parse the JSON response
-        questions_data = json.loads(response_content)
-
-        return jsonify(questions_data)
+            json_match = re.search(r'\{.*\}', response_content, re.DOTALL)
+            if json_match:
+                json_text = json_match.group(0)
+                
+                # Replace single quotes with double quotes
+                json_text = json_text.replace("'", '"')
+                
+                # Remove trailing commas
+                json_text = re.sub(r',\s*([}\]])', r'\1', json_text)
+                
+                try:
+                    questions_data = json.loads(json_text)
+                    return jsonify(questions_data)
+                except json.JSONDecodeError as e:
+                    print(f"JSON decoding failed: {e}")
+                    print(f"Invalid JSON text: {json_text}")
+                    return jsonify({'error': f'Invalid JSON format from AI response: {e}'}), 500
+            else:
+                print(f"No JSON object found in the AI response: {response_content}")
+                return jsonify({'error': 'AI response did not contain a valid JSON object'}), 500
 
     except Exception as e:
         print(f"Error generating questions: {str(e)}")

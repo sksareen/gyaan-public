@@ -39,6 +39,7 @@ const theme = createTheme({
       padding: '0.3rem 1rem',
       margin: '.6rem .5rem .6rem .5rem',
       transition: 'all 0.2s ease-in-out',
+      borderRadius: '12px',
     },
   },
   components: {

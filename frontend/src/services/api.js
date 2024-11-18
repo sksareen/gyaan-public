@@ -9,7 +9,7 @@ export const api = axios.create({
 
 export const generateGoals = async (topic, proficiency) => {
     try {
-        const response = await axios.post('/generate_goals', {
+        const response = await api.post('/generate_goals', {
             topic,
             proficiency
         });
@@ -22,7 +22,7 @@ export const generateGoals = async (topic, proficiency) => {
 
 export const generateRoadmap = async (topic, goals, proficiency) => {
     try {
-        const response = await axios.post('/generate_roadmap', {
+        const response = await api.post('/generate_roadmap', {
             topic,
             goals,
             proficiency
@@ -36,7 +36,7 @@ export const generateRoadmap = async (topic, goals, proficiency) => {
 
 export const generateModuleContent = async (topic, goals, proficiency) => {
     try {
-        const response = await axios.post('/generate_module_content', {
+        const response = await api.post('/generate_module_content', {
             topic,
             goals,
             proficiency
@@ -50,7 +50,7 @@ export const generateModuleContent = async (topic, goals, proficiency) => {
 
 export const generateModuleSection = async (topic, goals, proficiency, section) => {
     try {
-        const response = await axios.post('/generate_module_section', {
+        const response = await api.post('/generate_module_section', {
             topic,
             goals,
             proficiency,
@@ -69,16 +69,21 @@ export const generateModuleSection = async (topic, goals, proficiency, section) 
 };
 
 export const explainSentence = async (sentence, topic) => {
-    const response = await api.post('/api/explain-sentence', {
-        sentence,
-        topic
-    });
-    return response.data;
+    try {
+        const response = await api.post('/explain-sentence', {
+            sentence,
+            topic
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error in explainSentence:', error.response?.data || error.message);
+        throw error;
+    }
 };
 
 export const generateLearningCards = async (topic, proficiency) => {
     try {
-        const response = await api.post('/api/generate_learning_cards', {
+        const response = await api.post('/generate_learning_cards', {
             topic,
             proficiency
         });
@@ -91,7 +96,7 @@ export const generateLearningCards = async (topic, proficiency) => {
 
 export const generateMiniModule = async (topic) => {
     try {
-        const response = await axios.post('/generate_mini_module', {
+        const response = await api.post('/generate_mini_module', {
             topic
         });
         return response.data;
@@ -103,7 +108,7 @@ export const generateMiniModule = async (topic) => {
 
 export const generateQuestions = async (text) => {
     try {
-        const response = await api.post('/api/generate_questions', {
+        const response = await api.post('/generate_questions', {
             text
         });
         return response.data;

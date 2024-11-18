@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Drawer, Typography, CircularProgress, TextField, Button, IconButton, List, ListItem } from '@mui/material';
+import { Box, Drawer, Typography, CircularProgress, IconButton, List, ListItem } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import { formatMarkdownText } from '../utils/textFormatting';
 import InteractiveText from './InteractiveText';
 import BookmarkIcon from '@mui/icons-material/Bookmark';
 import BookmarkBorderIcon from '@mui/icons-material/BookmarkBorder';
 import { generateQuestions } from '../services/api';
+import QuestionPanel from './QuestionPanel';
+import { useTheme } from '@mui/material/styles';
 
 const SideWindow = ({
   open,
@@ -26,7 +29,8 @@ const SideWindow = ({
   const [questions, setQuestions] = useState([]);
   const [isFetchingQuestions, setIsFetchingQuestions] = useState(false);
   const [error, setError] = useState(null);
-
+  const [explanationContent, setExplanationContent] = useState('');
+  const theme = useTheme();
   React.useEffect(() => {
     if (!content || !topic) return;
     const savedExplanations = JSON.parse(localStorage.getItem(`explanations-${topic}`) || '[]');
@@ -62,7 +66,7 @@ const SideWindow = ({
     setError(null);
     try {
       const response = await generateQuestions(text);
-      setQuestions(response.data.questions || []);
+      setQuestions(response.questions || []);
     } catch (error) {
       console.error('Error fetching questions:', error);
       setError('Failed to generate questions');
@@ -78,6 +82,10 @@ const SideWindow = ({
     }
   }, [content]);
 
+  const handleExplanationReceived = (explanation) => {
+    setExplanationContent(explanation);
+  };
+
   return (
     <Drawer
       anchor="right"
@@ -88,9 +96,10 @@ const SideWindow = ({
           width: '10%',
           minWidth: 450,
           maxWidth: 600,
-          right: `${level * 7}%`,
+          right: `${level * 3}%`,
           p: 2,
-          borderRight: '4px solid #000',
+          // borderRight: '4px solid #000',
+          boxShadow: '10px 2px 10px -10px #000',
         },
       }}
     >
@@ -115,7 +124,7 @@ const SideWindow = ({
           <Box sx={{ my: 2 }}>
             {content ? (
               <InteractiveText topic={topic} level={level + 1}>
-                {content}
+                {formatMarkdownText(content)}
               </InteractiveText>
             ) : (
               children
@@ -123,10 +132,6 @@ const SideWindow = ({
 
             {!isLoading && content && (
               <Box sx={{ my: 2 }}>
-                <InteractiveText topic={topic} level={level + 1}>
-                  {content}
-                </InteractiveText>
-                
                 {isFetchingQuestions ? (
                   <Box sx={{ display: 'flex', alignItems: 'center', mt: 4 }}>
                     <CircularProgress size={20} sx={{ mr: 1 }} />
@@ -136,46 +141,20 @@ const SideWindow = ({
                   <Typography color="error" sx={{ mt: 4 }}>
                     {error}
                   </Typography>
-                ) : questions.length > 0 && (
-                  <Box sx={{ mt: 4 }}>
-                    <Typography variant="h6" gutterBottom>
-                      Quiz Questions
-                    </Typography>
-                    <List>
-                      {questions.map((questionText, index) => (
-                        <ListItem key={index} disablePadding sx={{ mb: 1 }}>
-                          <Typography variant="body1">
-                            {index + 1}. {questionText}
-                          </Typography>
-                        </ListItem>
-                      ))}
-                    </List>
-                  </Box>
-                )}
+                ) : questions.length > 0 
+                }
               </Box>
             )}
           </Box>
         )}
 
-        <Box sx={{ mt: 4 }}>
-          <TextField
-            fullWidth
-            variant="outlined"
-            label="Ask a question"
-            value={question}
-            onChange={(e) => setQuestion(e.target.value)}
-            onKeyPress={(e) => e.key === 'Enter' && onQuestionSubmit()}
-            sx={{ mb: 2 }}
-          />
-          <Button
-            variant="contained"
-            onClick={onQuestionSubmit}
-            disabled={isProcessing || !question.trim()}
-            endIcon={isProcessing ? <CircularProgress size={20} /> : null}
-          >
-            Ask
-          </Button>
-        </Box>
+
+        <QuestionPanel
+          topic={topic}
+          onExplanationReceived={handleExplanationReceived}
+          questions={questions}
+          level={level}
+        />
       </Box>
     </Drawer>
   );

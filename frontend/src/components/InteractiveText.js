@@ -81,8 +81,13 @@ const InteractiveText = ({ children, topic, level = 0 }) => {
     if (!effectiveTopic) {
       throw new Error('Cannot explain text: topic prop is missing.');
     }
-    const data = await explainSentence(text, effectiveTopic);
-    return formatMarkdownText(data.explanation);
+    try {
+      const data = await explainSentence(text, effectiveTopic);
+      return formatMarkdownText(data.explanation);
+    } catch (error) {
+      console.error('Error fetching explanation:', error);
+      throw new Error('Failed to fetch explanation. Please try again.');
+    }
   };
 
   const handleAskAboutSelection = async (text = selectedText) => {
