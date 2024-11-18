@@ -55,9 +55,9 @@ const NotebookView = () => {
 
     return (
         <Container maxWidth="lg">
-            <Box sx={{ mt: 8, mb: 4, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+            <Box sx={{ mt: 4, mb: 4, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
                 <Box sx={{ flexGrow: 1, display: 'flex', justifyContent: 'center' }}>
-                    <Typography variant="h4" gutterBottom>
+                    <Typography variant="h3" gutterBottom>
                         My Learning Notebook
                     </Typography>
                 </Box>
@@ -89,7 +89,7 @@ const NotebookView = () => {
                             maxHeight: isListView ? '80px' : '180px',
                             height: isListView ? '80px' : 'auto',
                             '&:hover': {
-                                cursor: 'pointer',
+
                                 boxShadow: 3
                             }
                         }}>

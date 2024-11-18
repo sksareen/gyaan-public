@@ -597,7 +597,7 @@ def explain_sentence():
         # Create the new message
         messages = conversation_history + [{
             "role": "user",
-            "content": f"""Explain '{sentence}' in the context of {topic}. Structure your response as a single paragraph under 150 words. Use simple english and key words. Get right to the answer, do not use  phrases like 'in the context of' or 'in relation to'.
+            "content": f"""Explain '{sentence}' in the context of {topic}. Structure your response as a single paragraph under 20 words. Use simple english and key words. Get right to the answer, do not use  phrases like 'in the context of' or 'in relation to'.
 
 Make every word count - pack in meaning while maintaining readability."""
         }]
@@ -654,7 +654,7 @@ def generate_learning_cards():
 3. Related to {topic}
 4. Appropriate for {proficiency} level learners
 
-Return the response in this exact JSON format, with no additional text or formatting:
+Return the response in this exact JSON format, with no additional text or formatting. max 20 words per card:
 {{
     "cards": [
         {{
@@ -775,7 +775,7 @@ Create a mini learning module about {topic} using the context {context}. Include
 
 1. A clear description of the concept (5 concise densesentences)
 2. The fundamental truths/first principles (3-5 bullet points)
-3. A concise summary (<300 words) in simple but conceptually dense language
+3. A concise summary under 20 words in simple but conceptually dense language
 
 Format each section in markdown."""
             }]
@@ -801,6 +801,59 @@ def get_mini_module(id):
     # Add artificial delay for testing loading state
     time.sleep(1)  # Remove this in production
     # Rest of your endpoint logic...
+
+@app.route('/api/generate_questions', methods=['POST'])
+def generate_questions():
+    data = request.get_json()
+    text = data.get('text', '')
+
+    if not text:
+        return jsonify({'error': 'Missing text'}), 400
+
+    try:
+        # Generate questions using the AI model
+        prompt = f"""Based on the following text, generate 3 simple comprehension questions that could be used to test understanding:
+
+{text}
+
+Provide the questions as a JSON array in the following format:
+
+{{
+  "questions": [
+    "Question 1",
+    "Question 2",
+    "Question 3"
+  ]
+}}"""
+
+        message = client.messages.create(
+            model=SONNET_MODEL,
+            max_tokens=500,
+            system=SYSTEM_PROMPT,
+            messages=[{
+                "role": "user",
+                "content": prompt
+            }]
+        )
+
+        # Parse the response
+        response_content = str(message.content).strip()
+
+        # Remove any TextBlock formatting if present
+        if 'TextBlock' in response_content:
+            import re
+            text_match = re.search(r"text='([\s\S]*?)'", response_content, re.DOTALL)
+            if text_match:
+                response_content = text_match.group(1)
+
+        # Parse the JSON response
+        questions_data = json.loads(response_content)
+
+        return jsonify(questions_data)
+
+    except Exception as e:
+        print(f"Error generating questions: {str(e)}")
+        return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
     print('[app.py] __main__ starting')

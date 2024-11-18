@@ -2,18 +2,26 @@ import { createTheme } from '@mui/material/styles';
 
 const theme = createTheme({
   typography: {
-    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif',
+    fontFamily: 'Lato',
     h1: {
       fontSize: '2.5rem',
       fontWeight: 600,
+      fontFamily: 'Poppins',
     },
     h2: {
       fontSize: '2rem',
       fontWeight: 600,
+      fontFamily: 'Poppins',
     },
     h3: {
       fontSize: '1.75rem',
       fontWeight: 600,
+      fontFamily: 'Poppins',
+    },
+    h4: {
+      fontSize: '1.5rem',
+      fontWeight: 600,
+      paddingTop: '1.5rem',
     },
     body1: {
       fontSize: '1rem',
@@ -23,6 +31,15 @@ const theme = createTheme({
       fontSize: '0.875rem',
       lineHeight: 1.5,
     },
+    button: {
+      fontFamily: 'Poppins',
+      textTransform: 'none',
+      boxShadow: '0px 2px 8px -3px #00000080',
+      fontWeight: 'bold',
+      padding: '0.3rem 1rem',
+      margin: '.6rem .5rem .6rem .5rem',
+      transition: 'all 0.2s ease-in-out',
+    },
   },
   components: {
     MuiTypography: {
@@ -31,6 +48,17 @@ const theme = createTheme({
           color: '#2D3748', // Dark gray color for better readability
         },
       },
+    },
+  },
+  palette: {
+    primary: {
+      main: '#00c464', // Use your preferred primary color
+    },
+    secondary: {
+      main: '#008B8B', // Use your preferred secondary color
+    },
+    background: {
+      main: '#ffffff', // Use your preferred tertiary color
     },
   },
 });

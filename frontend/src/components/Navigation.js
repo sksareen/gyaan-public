@@ -1,7 +1,10 @@
 import React from 'react';
 import { AppBar, Toolbar, Button, Box } from '@mui/material';
+import { useTheme } from '@mui/material/styles';
 
 const Navigation = () => {
+    const theme = useTheme();
+
     const scrollToSection = (elementId) => {
         setTimeout(() => {
             const element = document.getElementById(elementId);
@@ -20,15 +23,20 @@ const Navigation = () => {
 
     const buttonSx = {
         '&:hover': {
-            backgroundColor: 'grey.100'
+            backgroundColor: theme.palette.secondary.main,
+            color: theme.palette.background.main,
+            transition: 'all 0.3s ease',
+            transform: 'translateY(-1px)'
         }
     };
 
     const buttonSx2 = {
         '&:hover': {
-            backgroundColor: 'grey.500',
-            color: 'white',
-            transition: 'all 0.3s ease'
+            backgroundColor: theme.palette.secondary.main,
+            color: theme.palette.background.main,
+            transition: 'all 0.3s ease',
+            borderRadius: '50px',
+            transform: 'translateY(-1px)'
         }
     };
 
@@ -38,56 +46,44 @@ const Navigation = () => {
             color="default" 
             elevation={0}
             sx={{
-                backgroundColor: '#00c464',
+                backgroundColor: theme.palette.primary.main,
                 backdropFilter: 'blur(8px)',
-                color: 'white',
+                color: theme.components.MuiTypography.styleOverrides.root.color,
                 fontWeight: 'bold',
-                fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
+                fontFamily: theme.typography.fontFamily,
+                boxShadow: '0px -4px 15px 2px #00000080',
             }}
         >
             <Toolbar>
                 <Box sx={{ display: 'flex', gap: 2, margin: '0 auto' }}>
                     <Button 
-                        color="white"
-                        onClick={() => window.location.href = '/'}
-                        sx={buttonSx}
-                    >
-                        Home
-                    </Button>
-                    <Button 
-                        color="white"
-                        fontWeight="bold"
-                        border="1px solid grey"
                         onClick={() => window.location.href = '/notebook'}
-                        sx={buttonSx2}
+                        sx={{
+                            ...buttonSx2,
+                            backgroundColor: theme.palette.primary.main,
+                            color: theme.palette.background.main,
+                            borderRadius: '50px',
+                            padding: theme.typography.button.padding,
+                            fontSize: theme.typography.button.fontSize
+                        }}
                     >
                         My Notebook
                     </Button>
-                    {window.location.pathname === '/' && (
-                        <>
-                            {/* <Button 
-                                color="primary"
-                                onClick={() => scrollToSection('goals-section')}
-                                sx={buttonSx}
-                            >
-                                Goals
-                            </Button>
-                            <Button 
-                                color="primary"
-                                onClick={() => scrollToSection('roadmap-section')}
-                                sx={buttonSx}
-                            >
-                                Learning Roadmap
-                            </Button>
-                            <Button 
-                                color="primary"
-                                onClick={() => scrollToSection('module-section')}
-                                sx={buttonSx}
-                            >
-                                Module
-                            </Button> */}
-                        </>
-                    )}
+                    <Button 
+                        onClick={() => window.location.href = '/'}
+                        sx={{
+                            ...buttonSx,
+                            borderRadius: '50px', // Pill shape
+                            padding: '6px 16px', // Adjust padding for pill shape
+                            backgroundColor: theme.palette.background.main,
+                            transition: 'all 0.3s ease',
+                            fontWeight: '750',
+                            fontSize: '14px',
+                            color: theme.palette.primary.main
+                        }}
+                    >
+                        +New
+                    </Button>
                 </Box>
             </Toolbar>
         </AppBar>

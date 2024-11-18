@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Box, Typography, CircularProgress, TextField, Button } from '@mui/material';
 import { explainSentence } from '../services/api';
 import { formatMarkdownText } from '../utils/textFormatting';
+import theme from './Theme';
 
 const QuestionPanel = ({ topic, onExplanationReceived }) => {
   const [question, setQuestion] = useState('');
@@ -23,23 +24,31 @@ const QuestionPanel = ({ topic, onExplanationReceived }) => {
 
   return (
     <Box sx={{ mt: 4 }}>
-      <TextField
-        fullWidth
-        variant="outlined"
-        label="Ask a question"
-        value={question}
-        onChange={(e) => setQuestion(e.target.value)}
-        onKeyPress={(e) => e.key === 'Enter' && handleQuestionSubmit()}
-        sx={{ mb: 2 }}
-      />
-      <Button
-        variant="contained"
-        onClick={handleQuestionSubmit}
-        disabled={isExplaining || !question.trim()}
-        endIcon={isExplaining ? <CircularProgress size={20} /> : null}
-      >
-        Ask
-      </Button>
+      <Box sx={{ display: 'flex', gap: 1 }}>
+        <TextField
+          fullWidth
+          variant="outlined"
+          label="Ask a question"
+          value={question}
+          onChange={(e) => setQuestion(e.target.value)}
+          onKeyPress={(e) => e.key === 'Enter' && handleQuestionSubmit()}
+        />
+        <Button
+          variant="contained"
+          onClick={handleQuestionSubmit}
+          disabled={isExplaining || !question.trim()}
+          endIcon={isExplaining ? <CircularProgress size={20} /> : null}
+          sx={{
+            backgroundColor: theme.palette.primary.main,
+            color: theme.palette.background.main,
+            '&:hover': {
+              backgroundColor: theme.palette.secondary.main,
+            }
+          }}
+        >
+          Ask
+        </Button>
+      </Box>
     </Box>
   );
 };

@@ -1,11 +1,12 @@
-import React from 'react';
-import { Box, Drawer, Typography, CircularProgress, TextField, Button, IconButton } from '@mui/material';
+import React, { useState, useEffect } from 'react';
+import { Box, Drawer, Typography, CircularProgress, TextField, Button, IconButton, List, ListItem } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import InteractiveText from './InteractiveText';
 import BookmarkIcon from '@mui/icons-material/Bookmark';
 import BookmarkBorderIcon from '@mui/icons-material/BookmarkBorder';
+import { generateQuestions } from '../services/api';
 
 const SideWindow = ({
   open,
@@ -22,6 +23,9 @@ const SideWindow = ({
   topic,
 }) => {
   const [isSaved, setIsSaved] = React.useState(false);
+  const [questions, setQuestions] = useState([]);
+  const [isFetchingQuestions, setIsFetchingQuestions] = useState(false);
+  const [error, setError] = useState(null);
 
   React.useEffect(() => {
     if (!content || !topic) return;
@@ -50,6 +54,29 @@ const SideWindow = ({
       setIsSaved(true);
     }
   };
+
+  const fetchQuestions = async (text) => {
+    if (text.length < 50) return;
+    
+    setIsFetchingQuestions(true);
+    setError(null);
+    try {
+      const response = await generateQuestions(text);
+      setQuestions(response.data.questions || []);
+    } catch (error) {
+      console.error('Error fetching questions:', error);
+      setError('Failed to generate questions');
+      setQuestions([]);
+    } finally {
+      setIsFetchingQuestions(false);
+    }
+  };
+
+  useEffect(() => {
+    if (content) {
+      fetchQuestions(content);
+    }
+  }, [content]);
 
   return (
     <Drawer
@@ -92,6 +119,40 @@ const SideWindow = ({
               </InteractiveText>
             ) : (
               children
+            )}
+
+            {!isLoading && content && (
+              <Box sx={{ my: 2 }}>
+                <InteractiveText topic={topic} level={level + 1}>
+                  {content}
+                </InteractiveText>
+                
+                {isFetchingQuestions ? (
+                  <Box sx={{ display: 'flex', alignItems: 'center', mt: 4 }}>
+                    <CircularProgress size={20} sx={{ mr: 1 }} />
+                    <Typography variant="body2">Generating questions...</Typography>
+                  </Box>
+                ) : error ? (
+                  <Typography color="error" sx={{ mt: 4 }}>
+                    {error}
+                  </Typography>
+                ) : questions.length > 0 && (
+                  <Box sx={{ mt: 4 }}>
+                    <Typography variant="h6" gutterBottom>
+                      Quiz Questions
+                    </Typography>
+                    <List>
+                      {questions.map((questionText, index) => (
+                        <ListItem key={index} disablePadding sx={{ mb: 1 }}>
+                          <Typography variant="body1">
+                            {index + 1}. {questionText}
+                          </Typography>
+                        </ListItem>
+                      ))}
+                    </List>
+                  </Box>
+                )}
+              </Box>
             )}
           </Box>
         )}

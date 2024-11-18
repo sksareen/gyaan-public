@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const api = axios.create({
+export const api = axios.create({
     baseURL: 'http://localhost:5001',
     headers: {
         'Content-Type': 'application/json'
@@ -69,7 +69,7 @@ export const generateModuleSection = async (topic, goals, proficiency, section) 
 };
 
 export const explainSentence = async (sentence, topic) => {
-    const response = await axios.post('/api/explain-sentence', {
+    const response = await api.post('/api/explain-sentence', {
         sentence,
         topic
     });
@@ -97,6 +97,18 @@ export const generateMiniModule = async (topic) => {
         return response.data;
     } catch (error) {
         console.error('Error in generateMiniModule:', error.response?.data || error.message);
+        throw error;
+    }
+};
+
+export const generateQuestions = async (text) => {
+    try {
+        const response = await api.post('/api/generate_questions', {
+            text
+        });
+        return response.data;
+    } catch (error) {
+        console.error('Error in generateQuestions:', error.response?.data || error.message);
         throw error;
     }
 };

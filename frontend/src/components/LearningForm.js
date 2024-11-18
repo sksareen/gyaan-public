@@ -10,7 +10,7 @@ import {
     Box,
     Typography
 } from '@mui/material';
-import { ThemeProvider } from '@mui/material/styles';
+import { ThemeProvider, useTheme } from '@mui/material/styles';
 import theme from './Theme';
 import { generateGoals } from '../services/api';
 
@@ -32,6 +32,12 @@ const LearningForm = ({ onSubmit }) => {
 
         try {
             await onSubmit(topic.trim(), proficiency);
+            setTimeout(() => {
+                window.scrollTo({
+                    top: window.innerHeight,
+                    behavior: 'smooth'
+                });
+            }, 100);
         } catch (err) {
             setError(err.message || 'Failed to generate learning goals. Please try again.');
             console.error('Error:', err);
@@ -40,60 +46,68 @@ const LearningForm = ({ onSubmit }) => {
         }
     };
 
-    return (
-        <Container maxWidth="sm">
-            <Box sx={{ mt: 4, mb: 4 }}>
-                <Typography variant="h4" component="h1" gutterBottom align="center">
-                    Gyaan Learning
-                </Typography>
-                <form onSubmit={handleSubmit}>
-                    <TextField
-                        fullWidth
-                        label="What do you want to learn?"
-                        value={topic}
-                        onChange={(e) => setTopic(e.target.value)}
-                        margin="normal"
-                        required
-                        sx={{ borderRadius: '15px' }}
-                    />
-                    <FormControl fullWidth margin="normal">
-                        <InputLabel>Proficiency Level</InputLabel>
-                        <Select
-                            value={proficiency}
-                            onChange={(e) => setProficiency(e.target.value)}
-                            sx={{ borderRadius: '10px' }}
-                            label="Proficiency Level"
-                        >
-                            <MenuItem value="beginner">Beginner</MenuItem>
-                            <MenuItem value="intermediate">Intermediate</MenuItem>
-                            <MenuItem value="advanced">Advanced</MenuItem>
-                        </Select>
-                    </FormControl>
+    const theme = useTheme();
 
-                    <Button
-                        type="submit"
-                        variant="contained"
-                        sx={{ 
-                            borderRadius: '15px', 
-                            mt: 2,
-                            backgroundColor: '#00c464',
-                            '&:hover': {
-                                backgroundColor: '#00b058'
-                            }
-                        }}
-                        fullWidth
-                        disabled={loading}
-                    >
-                        {loading ? 'Generating...' : 'Generate Learning Path'}
-                    </Button>
-                    {error && (
-                        <Typography color="error" sx={{ mt: 2 }}>
-                            {error}
-                        </Typography>
-                    )}
-                </form>
-            </Box>
-        </Container>
+    return (
+        <ThemeProvider theme={theme}>
+            <Container maxWidth="sm">
+                <Box sx={{ mt: 4, mb: 4 }}>
+                    <Typography variant="h2" component="h1" gutterBottom align="center">
+                        Gyaan Learning
+                    </Typography>
+                    <form onSubmit={handleSubmit}>
+                        <TextField
+                            fullWidth
+                            label="What do you want to learn?"
+                            value={topic}
+                            onChange={(e) => setTopic(e.target.value)}
+                            margin="normal"
+                            required
+                            sx={{ borderRadius: '15px' }}
+                        />
+                        <FormControl fullWidth margin="normal">
+                            <InputLabel>Proficiency Level</InputLabel>
+                            <Select
+                                value={proficiency}
+                                onChange={(e) => setProficiency(e.target.value)}
+                                sx={{ borderRadius: '10px' }}
+                                label="Proficiency Level"
+                            >
+                                <MenuItem value="beginner">Beginner</MenuItem>
+                                <MenuItem value="intermediate">Intermediate</MenuItem>
+                                <MenuItem value="advanced">Advanced</MenuItem>
+                            </Select>
+                        </FormControl>
+
+                        <Button
+                            type="submit"
+                            variant="contained"
+                            sx={{ 
+                                borderRadius: '15px', 
+                                mt: 2,
+                                boxShadow: '0px 2px 8px -3px #00000080',
+                                backgroundColor: theme.palette.primary.main,
+                                color: theme.palette.background.main,
+                                '&:hover': {
+                                    backgroundColor: theme.palette.secondary.main,
+                                    transform: 'translateY(-1px)',
+                                    transition: 'all 0.2s ease-in-out'
+                                }
+                            }}
+                            fullWidth
+                            disabled={loading}
+                        >
+                            {loading ? 'Creating Your Path...' : 'Start Your Learning Journey'}
+                        </Button>
+                        {error && (
+                            <Typography color="error" sx={{ mt: 2 }}>
+                                {error}
+                            </Typography>
+                        )}
+                    </form>
+                </Box>
+            </Container>
+        </ThemeProvider>
     );
 };
 

@@ -121,10 +121,12 @@ const MiniModule = ({ open, onClose, title, content }) => {
   return (
     <>
       <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
-        <DialogTitle>
-          <Typography variant="h5">{title}</Typography>
-        </DialogTitle>
         <DialogContent>
+          <Box sx={{ typography: 'h5', fontWeight: 'bold', mb: 3 }}>
+            <ReactMarkdown components={components}>
+              {formatMarkdownText(title.description)}
+            </ReactMarkdown>
+          </Box>          
           <Box mb={3}>
             <Typography variant="h6" gutterBottom>Overview</Typography>
             <ReactMarkdown components={components}>

@@ -90,18 +90,18 @@ const MiniModuleView = () => {
     },
     
     h1: ({ children }) => (
-      <Typography variant="h4" sx={{ mb: 2 }}>
-        <InteractiveText topic={moduleData?.topic}>{children}</InteractiveText>
+      <Typography variant="h3" component="h1" sx={{ mb: 3, mt: 2, fontWeight: 'bold' }}>
+        {children}
       </Typography>
     ),
     h2: ({ children }) => (
-      <Typography variant="h5" sx={{ mb: 2 }}>
-        <InteractiveText topic={moduleData?.topic}>{children}</InteractiveText>
+      <Typography variant="h4" component="h2" sx={{ mb: 2, mt: 2, fontWeight: 'bold' }}>
+        {children}
       </Typography>
     ),
     h3: ({ children }) => (
-      <Typography variant="h6" sx={{ mb: 2 }}>
-        <InteractiveText topic={moduleData?.topic}>{children}</InteractiveText>
+      <Typography variant="h5" component="h3" sx={{ mb: 2, mt: 2, fontWeight: 'bold' }}>
+        {children}
       </Typography>
     ),
     
@@ -227,10 +227,7 @@ const MiniModuleView = () => {
 
           {renderSavedExplanations()}
 
-          <Box sx={{ my: 4, p: 2, bgcolor: 'background.paper', borderRadius: 1 }}>
-            <Typography variant="h6" gutterBottom>
-              Ask a Question
-            </Typography>
+          <Box sx={{ my: 6, py: 0, bgcolor: 'background.paper', borderRadius: 1 }}>
             <QuestionPanel 
               topic={moduleData?.topic} 
               onExplanationReceived={handleExplanationReceived}
