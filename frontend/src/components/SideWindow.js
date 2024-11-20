@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Box, Drawer, Typography, CircularProgress, IconButton, List, ListItem } from '@mui/material';
+import React, { useState, useEffect, useRef } from 'react';
+import { Box, Typography, CircularProgress, IconButton, List, ListItem } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -57,6 +57,8 @@ const SideWindow = ({
   const [examplesError, setExamplesError] = useState(null);
   const [citations, setCitations] = useState([]);
   const theme = useTheme();
+  const contentRef = useRef(null);
+
   React.useEffect(() => {
     if (!content || !topic) return;
     const savedExplanations = JSON.parse(localStorage.getItem(`explanations-${topic}`) || '[]');
@@ -121,7 +123,8 @@ const SideWindow = ({
   };
 
   useEffect(() => {
-    if (content) {
+    if (content && contentRef.current !== content) {
+      contentRef.current = content;
       fetchQuestions(content);
       fetchExamples(content);
     }
@@ -132,63 +135,70 @@ const SideWindow = ({
   };
 
   return (
-    <Drawer
-      anchor="right"
-      open={open}
-      onClose={onClose}
+    <Box
       sx={{
-        '& .MuiDrawer-paper': {
-          width: '10%',
-          minWidth: 450,
-          maxWidth: 600,
-          right: `${level * 3}%`,
-          p: 2,
-          // borderRight: '4px solid #000',
-          boxShadow: '10px 2px 10px -10px #000',
-        },
+        display: open ? 'block' : 'none',
+        width: '100%',
+        borderTop: '1px solid',
+        borderColor: 'divider',
+        mt: 2,
+        p: 3,
+        backgroundColor: theme.palette.background.paper,
+        borderRadius: '5px',
+        boxShadow: '0px 4px 10px rgba(0, 0, 0, 0.1)',
+        zIndex: 9999
       }}
     >
-      <Box sx={{ p: 3, height: '100%', overflowY: 'auto' }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-          <Typography fontWeight="bold" lineHeight={1.3} fontStyle="italic" gutterBottom sx={{ flexGrow: 1 }}>
-            {title}
-          </Typography>
-          <IconButton onClick={handleSave} sx={{ mr: 1 }}>
-            {isSaved ? <BookmarkIcon /> : <BookmarkBorderIcon />}
-          </IconButton>
-          <IconButton onClick={onClose}>
-            <CloseIcon />
-          </IconButton>
-        </Box>
+      <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+        <Typography fontWeight="bold" lineHeight={1.3} fontStyle="italic" gutterBottom sx={{ flexGrow: 1 }}>
+          {title}
+        </Typography>
+        <IconButton onClick={handleSave} sx={{ mr: 1 }}>
+          {isSaved ? <BookmarkIcon /> : <BookmarkBorderIcon />}
+        </IconButton>
+        <IconButton onClick={onClose}>
+          <CloseIcon />
+        </IconButton>
+      </Box>
 
+      <Box>
         {isLoading ? (
           <Box sx={{ display: 'flex', justifyContent: 'center', my: 2 }}>
             <CircularProgress />
           </Box>
         ) : (
-          <Box sx={{ my: 2 }}>
-            {content ? (
-              <InteractiveText topic={topic} level={level + 1}>
-                {formatMarkdownText(content)}
-              </InteractiveText>
-            ) : (
-              children
-            )}
+          <>
+            <Box sx={{ my: 2 }}>
+              {content ? (
+                <InteractiveText topic={topic} level={level + 1}>
+                  {formatMarkdownText(content)}
+                </InteractiveText>
+              ) : (
+                children
+              )}
+            </Box>
+            
+            <Box sx={{ mb: 4 }}>
+              <QuestionPanel
+                topic={topic}
+                onExplanationReceived={handleExplanationReceived}
+                questions={questions}
+                level={level}
+              />
+            </Box>
 
             {!isLoading && content && (
-              <Box sx={{ my: 2 }}>
+              <Box sx={{ mb: 4 }}>
                 {isFetchingExamples ? (
-                  <Box sx={{ display: 'flex', alignItems: 'center', mt: 4 }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
                     <CircularProgress size={20} sx={{ mr: 1 }} />
-                    <Typography variant="body2">Generating examples...</Typography>
+                    <Typography variant="body2">Finding examples...</Typography>
                   </Box>
                 ) : examplesError ? (
-                  <Typography color="error" sx={{ mt: 4 }}>
-                    {examplesError}
-                  </Typography>
+                  <Typography color="error">{examplesError}</Typography>
                 ) : examples.length > 0 && (
-                  <Box sx={{ mt: 4 }}>
-                    <Typography variant="h6" gutterBottom>Examples</Typography>
+                  <Box>
+                    {/* <Typography variant="h6" gutterBottom>Examples</Typography> */}
                     {examples.map((example, index) => (
                       <Box key={index} sx={styles.exampleBox}>
                         <Typography 
@@ -212,34 +222,41 @@ const SideWindow = ({
                         
                         {citations.length > 0 && (
                           <Box sx={styles.citationBox}>
-                            <Typography 
-                              variant="body2" 
-                              color="text.secondary"
-                              sx={{ 
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: 1
-                              }}
-                            >
-                              <span>Source:</span>
-                              <a 
-                                href={citations[0].url} 
-                                target="_blank" 
-                                rel="noopener noreferrer"
-                                style={{
-                                  color: theme.palette.primary.main,
-                                  textDecoration: 'none'
-                                }}
-                                onMouseOver={(e) => {
-                                  e.target.style.textDecoration = 'underline';
-                                }}
-                                onMouseOut={(e) => {
-                                  e.target.style.textDecoration = 'none';
+                            <Typography variant="body2" color="text.secondary">
+                              Sources:
+                            </Typography>
+                            {citations.map((citation, index) => (
+                              <Typography 
+                                key={index}
+                                variant="body2" 
+                                color="text.secondary"
+                                sx={{ 
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: 1,
+                                  mt: 0.5
                                 }}
                               >
-                                {citations[0].text}
-                              </a>
-                            </Typography>
+                                <span>{index + 1}.</span>
+                                <a 
+                                  href={citation.url} 
+                                  target="_blank" 
+                                  rel="noopener noreferrer"
+                                  style={{
+                                    color: theme.palette.primary.main,
+                                    textDecoration: 'none'
+                                  }}
+                                  onMouseOver={(e) => {
+                                    e.target.style.textDecoration = 'underline';
+                                  }}
+                                  onMouseOut={(e) => {
+                                    e.target.style.textDecoration = 'none';
+                                  }}
+                                >
+                                  {citation.text}
+                                </a>
+                              </Typography>
+                            ))}
                           </Box>
                         )}
                       </Box>
@@ -248,31 +265,10 @@ const SideWindow = ({
                 )}
               </Box>
             )}
-
-            {!isLoading && content && (
-              <Box sx={{ my: 2 }}>
-                {isFetchingQuestions ? (
-                  <Box sx={{ display: 'flex', alignItems: 'center', mt: 4 }}>
-                    <CircularProgress size={20} sx={{ mr: 1 }} />
-                    <Typography variant="body2">Generating questions...</Typography>
-                  </Box>
-                ) : error ? (
-                  <Typography color="error" sx={{ mt: 4 }}>
-                    {error}
-                  </Typography>
-                ) : questions.length > 0 }
-              </Box>
-            )}
-          </Box>
+          </>
         )}
-        <QuestionPanel
-          topic={topic}
-          onExplanationReceived={handleExplanationReceived}
-          questions={questions}
-          level={level}
-        />
       </Box>
-    </Drawer>
+    </Box>
   );
 };
 

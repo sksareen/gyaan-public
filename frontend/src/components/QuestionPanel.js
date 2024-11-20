@@ -50,7 +50,7 @@ const QuestionPanel = ({ topic, onExplanationReceived, questions = [], level }) 
             alignItems: 'center',
             justifyContent: 'center',
             backgroundColor: 'rgba(255, 255, 255, 0.8)',
-            zIndex: 1,
+            zIndex: 1
           }}
         >
           <CircularProgress />
@@ -58,10 +58,15 @@ const QuestionPanel = ({ topic, onExplanationReceived, questions = [], level }) 
       )}
       {questions.length > 0 && (
         <Box sx={{ mb: 3 }}>
-          <Typography variant="h6" gutterBottom>
-            Suggested Questions
-          </Typography>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+          {/* <Typography variant="h6" gutterBottom>
+            Dig Deeper
+          </Typography> */}
+          <Box sx={{ 
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+            gap: 2,
+            width: '100%'
+          }}>
             {questions.map((questionText, index) => (
               <Button
                 key={index}
@@ -77,6 +82,7 @@ const QuestionPanel = ({ topic, onExplanationReceived, questions = [], level }) 
                   margin: '1px',
                   borderRadius: '12px',
                   fontWeight: '600',
+                  fontSize: '.75rem',
                   color: theme.palette.primary.secondary,
                   '&:hover': {
                     backgroundColor: theme.palette.primary.light,

@@ -48,14 +48,31 @@ const MiniModuleView = () => {
   }, [moduleData?.topic]);
 
   const components = {
-    p: ({ children }) => (
-      <Typography 
-        component="p" 
-        sx={{ mb: 2 }}
-      >
-        <InteractiveText topic={moduleData?.topic}>{children}</InteractiveText>
-      </Typography>
-    ),
+    p: ({ children, ...props }) => {
+      // Check if this is the first paragraph in the content
+      const isFirstParagraph = props.node?.position?.start?.offset === 0;
+      
+      if (isFirstParagraph) {
+        return (
+          <Typography 
+            variant="h4"
+            component="h1" 
+            sx={{ mb: 3, fontWeight: 'bold' }}
+          >
+            {children}
+          </Typography>
+        );
+      }
+      
+      return (
+        <Typography 
+          component="p" 
+          sx={{ mb: 2 }}
+        >
+          <InteractiveText topic={moduleData?.topic}>{children}</InteractiveText>
+        </Typography>
+      );
+    },
     
     ul: ({ children }) => (
       <Box component="ul" sx={{ pl: 2, mb: 2 }}>
@@ -190,66 +207,62 @@ const MiniModuleView = () => {
   }
 
   return (
-    <>
-      <Container maxWidth="md">
-        <Box sx={{ mt: 4 }}>
-          {/* <Typography variant="h4" gutterBottom>{moduleData.topic}</Typography> */}
-          
-          <Box mb={3}>
-            {/* <Typography variant="h6" gutterBottom>Overview</Typography> */}
-            <ReactMarkdown
-              components={components}
-              remarkPlugins={[remarkGfm]}
-            >
-              {formatMarkdownText(moduleData.content.description)}
-            </ReactMarkdown>
-          </Box>
-          
-          <Box mb={3}>
-            {/* <Typography variant="h6" gutterBottom>First Principles</Typography> */}
-            <ReactMarkdown
-              components={components}
-              remarkPlugins={[remarkGfm]}
-            >
-              {formatMarkdownText(moduleData.content.fundamentals)}
-            </ReactMarkdown>
-          </Box>
-
-          <Box mb={3}>
-            {/* <Typography variant="h6" gutterBottom>Key Concepts</Typography> */}
-            <ReactMarkdown
-              components={components}
-              remarkPlugins={[remarkGfm]}
-            >
-              {formatMarkdownText(moduleData.content.summary)}
-            </ReactMarkdown>
-          </Box>
-
-          {renderSavedExplanations()}
-
-          <Box sx={{ my: 6, py: 0, bgcolor: 'background.paper', borderRadius: 1 }}>
-            <QuestionPanel 
-              topic={moduleData?.topic} 
-              onExplanationReceived={handleExplanationReceived}
-            />
-          </Box>
-
+    <Container maxWidth="md">
+      <Box sx={{ mt: 4, mb: 6 }}>
+        {/* Main Content Section */}
+        <Box mb={3}>
+          <ReactMarkdown
+            components={components}
+            remarkPlugins={[remarkGfm]}
+          >
+            {formatMarkdownText(moduleData.content.description)}
+          </ReactMarkdown>
         </Box>
-      </Container>
-      
-      <SideWindow
-        open={isDrawerOpen}
-        onClose={() => setIsDrawerOpen(false)}
-        title={selectedText ? `"${selectedText}"` : 'Ask a question'}
-        content={explanation}
-        question={userQuestion}
-        setQuestion={setUserQuestion}
-        onQuestionSubmit={handleQuestionSubmit}
-        isLoading={loading}
-        isProcessing={isProcessing}
-        topic={moduleData?.topic}
-      />
-    </>
+
+        {/* Side Window Section */}
+        <SideWindow
+          open={isDrawerOpen}
+          onClose={() => setIsDrawerOpen(false)}
+          title={selectedText ? `"${selectedText}"` : 'Ask a question'}
+          content={explanation}
+          question={userQuestion}
+          setQuestion={setUserQuestion}
+          onQuestionSubmit={handleQuestionSubmit}
+          isLoading={loading}
+          isProcessing={isProcessing}
+          topic={moduleData?.topic}
+        />
+        
+        {/* Fundamentals Section */}
+        <Box mb={3}>
+          <ReactMarkdown
+            components={components}
+            remarkPlugins={[remarkGfm]}
+          >
+            {formatMarkdownText(moduleData.content.fundamentals)}
+          </ReactMarkdown>
+        </Box>
+
+        {/* Key Concepts Section */}
+        <Box mb={3}>
+          <ReactMarkdown
+            components={components}
+            remarkPlugins={[remarkGfm]}
+          >
+            {formatMarkdownText(moduleData.content.summary)}
+          </ReactMarkdown>
+        </Box>
+
+        {renderSavedExplanations()}
+
+        <Box sx={{ my: 6, py: 0, bgcolor: 'background.paper', borderRadius: 1 }}>
+          <QuestionPanel 
+            topic={moduleData?.topic} 
+            onExplanationReceived={handleExplanationReceived}
+          />
+        </Box>
+      </Box>
+    </Container>
   );
 };
 

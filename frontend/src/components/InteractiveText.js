@@ -207,7 +207,7 @@ const InteractiveText = ({ children, topic, level = 0 }) => {
           // Clear the text selection
           window.getSelection().removeAllRanges();
         }}
-        title={explainedText ? `Digging deeper into: "${explainedText}"` : 'Ask a question'}
+        title={explainedText ? `"${explainedText}"` : 'Ask a question'}
         content={explanation}
         question={userQuestion}
         setQuestion={setUserQuestion}
