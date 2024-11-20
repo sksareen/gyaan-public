@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { formatMarkdownText } from '../utils/textFormatting';
 
 export const api = axios.create({
     baseURL: 'http://localhost:5001',
@@ -115,6 +116,54 @@ export const generateQuestions = async (text) => {
     } catch (error) {
         console.error('Error in generateQuestions:', error.response?.data || error.message);
         throw error;
+    }
+};
+
+export const generateExamples = async (text, topic) => {
+    try {
+        const response = await api.post('/generate_examples', { 
+            text,
+            topic 
+        });
+        
+        console.log('Perplexity API Response:', response.data);
+        
+        let content = response.data?.choices?.[0]?.message?.content || '';
+        content = formatMarkdownText(content);
+        
+        const words = content.split(' ');
+        if (words.length > 100) {
+            content = words.slice(0, 100).join(' ') + '...';
+        }
+
+        const citations = response.data?.citations || [];
+        console.log('Citations:', citations);
+
+        return {
+            examples: [{
+                description: content || 'Example not available',
+                type: 'Real-world Example'
+            }],
+            citations: citations.map(citation => ({
+                text: citation.title || 'Citation not available',
+                url: citation.url || '#'
+            })) || [{
+                text: 'Citation not available',
+                url: '#'
+            }]
+        };
+    } catch (error) {
+        console.error('Error in generateExamples:', error.response?.data || error.message);
+        return {
+            examples: [{
+                description: 'Unable to load example at this time',
+                type: 'Real-world Example'
+            }],
+            citations: [{
+                text: 'Citation unavailable',
+                url: '#'
+            }]
+        };
     }
 };
 

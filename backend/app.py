@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, make_response
 from flask_cors import CORS
 from exa_py import Exa
 import anthropic
@@ -12,6 +12,8 @@ from functools import wraps
 import time
 from utils import validate_request, parse_goals, parse_markdown_content
 from anthropic import Anthropic, HUMAN_PROMPT, AI_PROMPT
+import openai
+import requests
 
 # Configure logging
 logging.basicConfig(
@@ -35,7 +37,8 @@ CORS(app, resources={
     r"/*": {
         "origins": ["http://localhost:3000"],
         "methods": ["GET", "POST", "OPTIONS"],
-        "allow_headers": ["Content-Type"]
+        "allow_headers": ["Content-Type", "Authorization"],
+        "supports_credentials": True
     }
 })
 
@@ -627,8 +630,16 @@ Make every word count - pack in meaning while maintaining readability."""
         print(f"Server Error: {str(e)}")
         return jsonify({'error': f'Server error: {str(e)}'}), 500
 
-@app.route('/api/generate_learning_cards', methods=['POST'])
+@app.route('/generate_learning_cards', methods=['POST', 'OPTIONS'])
 def generate_learning_cards():
+    # Handle preflight request
+    if request.method == 'OPTIONS':
+        response = make_response()
+        response.headers.add('Access-Control-Allow-Origin', 'http://localhost:3000')
+        response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
+        response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
+        return response, 200
+        
     try:
         data = request.get_json()
         print("Received data:", data)
@@ -810,7 +821,7 @@ def generate_questions():
 
     try:
         # Construct the instruction
-        instructions = f"""Based on the following text, generate 3 simple comprehension questions that could be used to test understanding:
+        instructions = f"""Based on the following text, generate 3 simple comprehension questions that could be used to test understanding. one is practice, one is theoretical, one is historical:
 
 {text}
 
@@ -819,7 +830,7 @@ Provide **only** the JSON response in the following format and nothing else:
 {{
   "questions": [
     "Question 1",
-    "Question 2",
+    "Question 2", 
     "Question 3"
   ]
 }}
@@ -882,6 +893,83 @@ Do not include any extra text before or after the JSON object."""
     except Exception as e:
         print(f"Error generating questions: {str(e)}")
         return jsonify({'error': str(e)}), 500
+
+@app.route('/generate_examples', methods=['POST'])
+@app.route('/api/generate_examples', methods=['POST']) 
+def generate_examples():
+    data = request.get_json()
+    text = data.get('text', '')
+    topic = data.get('topic', '')
+
+    if not text:
+        return jsonify({'error': 'Missing text'}), 400
+
+    try:
+        headers = {
+            'Authorization': f'Bearer {os.getenv("PERPLEXITY_API_KEY")}',
+            'Content-Type': 'application/json',
+        }
+
+        data_payload = {
+            "model": "llama-3.1-sonar-huge-128k-online",
+            "messages": [
+                {
+                    "role": "system", 
+                    "content": "You are an expert at finding real-world examples with verifiable sources."
+                },
+                {
+                    "role": "user",
+                    "content": f"Find a specific real-world example of this concept from {topic}: '{text}'. Keep the example under 100 words and include citation numbers in the text that match the returned citations."
+                }
+            ],
+            "max_tokens": 1000,
+            "temperature": 0.2,
+            "return_citations": True,
+            "search_recency_filter": "year",
+            "frequency_penalty": 1
+        }
+
+        response = requests.post(
+            "https://api.perplexity.ai/chat/completions",
+            headers=headers,
+            json=data_payload,
+            timeout=30
+        )
+
+        response_json = response.json()
+        
+        # Log the complete response for debugging
+        print("Perplexity API Complete Response:", response_json)
+        
+        content = response_json.get('choices', [{}])[0].get('message', {}).get('content', '')
+        citations = response_json.get('citations', [])
+
+        # Log the processed data
+        print("Content:", content)
+        print("Citations:", citations)
+
+        example_data = {
+            'choices': [{
+                'message': {
+                    'content': content or 'No example available'
+                }
+            }],
+            'citations': citations or []
+        }
+
+        return jsonify(example_data)
+
+    except Exception as e:
+        logger.error(f"Error generating example: {str(e)}")
+        return jsonify({
+            'choices': [{
+                'message': {
+                    'content': f'Error generating example: {str(e)}'
+                }
+            }],
+            'citations': []
+        })
+
 
 if __name__ == '__main__':
     print('[app.py] __main__ starting')

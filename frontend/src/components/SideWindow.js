@@ -7,9 +7,31 @@ import { formatMarkdownText } from '../utils/textFormatting';
 import InteractiveText from './InteractiveText';
 import BookmarkIcon from '@mui/icons-material/Bookmark';
 import BookmarkBorderIcon from '@mui/icons-material/BookmarkBorder';
-import { generateQuestions } from '../services/api';
+import { generateQuestions, generateExamples } from '../services/api';
 import QuestionPanel from './QuestionPanel';
 import { useTheme } from '@mui/material/styles';
+
+const styles = {
+    exampleBox: {
+        backgroundColor: '#f5f5f5',
+        padding: 2,
+        borderRadius: 1,
+        border: '1px solid #e0e0e0',
+        marginBottom: 2
+    },
+    citationBox: {
+        marginTop: 1,
+        padding: 1,
+        borderTop: '1px solid #e0e0e0'
+    },
+    citationLink: {
+        color: 'primary.main',
+        textDecoration: 'none',
+        '&:hover': {
+            textDecoration: 'underline'
+        }
+    }
+};
 
 const SideWindow = ({
   open,
@@ -30,6 +52,10 @@ const SideWindow = ({
   const [isFetchingQuestions, setIsFetchingQuestions] = useState(false);
   const [error, setError] = useState(null);
   const [explanationContent, setExplanationContent] = useState('');
+  const [examples, setExamples] = useState([]);
+  const [isFetchingExamples, setIsFetchingExamples] = useState(false);
+  const [examplesError, setExamplesError] = useState(null);
+  const [citations, setCitations] = useState([]);
   const theme = useTheme();
   React.useEffect(() => {
     if (!content || !topic) return;
@@ -76,9 +102,28 @@ const SideWindow = ({
     }
   };
 
+  const fetchExamples = async (text) => {
+    if (text.length < 50) return;
+    setIsFetchingExamples(true);
+    setExamplesError(null);
+    try {
+      const response = await generateExamples(text, topic);
+      setExamples(response.examples || []);
+      setCitations(response.citations || []);
+    } catch (error) {
+      console.error('Error fetching examples:', error);
+      setExamplesError('Failed to generate examples');
+      setExamples([]);
+      setCitations([]);
+    } finally {
+      setIsFetchingExamples(false);
+    }
+  };
+
   useEffect(() => {
     if (content) {
       fetchQuestions(content);
+      fetchExamples(content);
     }
   }, [content]);
 
@@ -132,6 +177,80 @@ const SideWindow = ({
 
             {!isLoading && content && (
               <Box sx={{ my: 2 }}>
+                {isFetchingExamples ? (
+                  <Box sx={{ display: 'flex', alignItems: 'center', mt: 4 }}>
+                    <CircularProgress size={20} sx={{ mr: 1 }} />
+                    <Typography variant="body2">Generating examples...</Typography>
+                  </Box>
+                ) : examplesError ? (
+                  <Typography color="error" sx={{ mt: 4 }}>
+                    {examplesError}
+                  </Typography>
+                ) : examples.length > 0 && (
+                  <Box sx={{ mt: 4 }}>
+                    <Typography variant="h6" gutterBottom>Examples</Typography>
+                    {examples.map((example, index) => (
+                      <Box key={index} sx={styles.exampleBox}>
+                        <Typography 
+                          variant="subtitle1" 
+                          color="primary" 
+                          fontWeight="bold"
+                          sx={{ mb: 1 }}
+                        >
+                          {example.type}
+                        </Typography>
+                        <Typography 
+                          variant="body1" 
+                          sx={{ 
+                            mb: 2,
+                            lineHeight: 1.6,
+                            fontSize: '0.95rem'
+                          }}
+                        >
+                          {example.description}
+                        </Typography>
+                        
+                        {citations.length > 0 && (
+                          <Box sx={styles.citationBox}>
+                            <Typography 
+                              variant="body2" 
+                              color="text.secondary"
+                              sx={{ 
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 1
+                              }}
+                            >
+                              <span>Source:</span>
+                              <a 
+                                href={citations[0].url} 
+                                target="_blank" 
+                                rel="noopener noreferrer"
+                                style={{
+                                  color: theme.palette.primary.main,
+                                  textDecoration: 'none'
+                                }}
+                                onMouseOver={(e) => {
+                                  e.target.style.textDecoration = 'underline';
+                                }}
+                                onMouseOut={(e) => {
+                                  e.target.style.textDecoration = 'none';
+                                }}
+                              >
+                                {citations[0].text}
+                              </a>
+                            </Typography>
+                          </Box>
+                        )}
+                      </Box>
+                    ))}
+                  </Box>
+                )}
+              </Box>
+            )}
+
+            {!isLoading && content && (
+              <Box sx={{ my: 2 }}>
                 {isFetchingQuestions ? (
                   <Box sx={{ display: 'flex', alignItems: 'center', mt: 4 }}>
                     <CircularProgress size={20} sx={{ mr: 1 }} />
@@ -141,14 +260,11 @@ const SideWindow = ({
                   <Typography color="error" sx={{ mt: 4 }}>
                     {error}
                   </Typography>
-                ) : questions.length > 0 
-                }
+                ) : questions.length > 0 }
               </Box>
             )}
           </Box>
         )}
-
-
         <QuestionPanel
           topic={topic}
           onExplanationReceived={handleExplanationReceived}
