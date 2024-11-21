@@ -57,8 +57,17 @@ const LearningForm = ({ onSubmit }) => {
 
     return (
         <ThemeProvider theme={theme}>
-            <Container maxWidth="sm">
-                <Box sx={{ mt: 4, mb: 4 }}>
+            <Container 
+                maxWidth="md" 
+                sx={{ 
+                    display: 'flex', 
+                    flexDirection: 'column', 
+                    alignItems: 'center', 
+                    justifyContent: 'center', 
+                    minHeight: '85vh' 
+                }}
+            >
+                <Box sx={{ mt: 4, mb: 4, minWidth: '300px', width: '80%', }}>
                     <img src="logo.png" alt="logo" style={{ borderRadius: '50%', height: '100px', width: '100px', marginLeft: 'auto', marginRight: 'auto', display: 'block', margin: '0 auto', marginBottom: '1.5rem' }}/>
                     <Typography variant="h1" component="h1" gutterBottom align="center">
                         Gyaan Learning

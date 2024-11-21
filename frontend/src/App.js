@@ -30,6 +30,7 @@ function App() {
     const [selectedGoals, setSelectedGoals] = useState([]);
     const [learningCards, setLearningCards] = useState([]);
     const [miniModuleLoading, setMiniModuleLoading] = useState(false);
+    const [isOpen, setIsOpen] = useState(false);
 
     const handleFormSubmit = async (topic, proficiency) => {
         setLoading(true);
@@ -134,44 +135,59 @@ function App() {
                     </Typography>
                 </Box>
             )}
-            <Navigation />
-            <Box sx={{ pt: '64px' }}>
-                <Routes>
-                    <Route path="/notebook" element={<NotebookView />} />
-                    <Route path="/saved" element={<SavedView />} />
-                    <Route path="/mini-module/:id" element={<MiniModuleView />} />
-                    <Route path="/" element={
-                        <Container maxWidth="lg">
-                            <LearningForm onSubmit={handleFormSubmit} />
-                            {goals.length > 0 && (
-                                <Box id="goals-section">
-                                    <Goals goals={goals} onGoalsSelected={handleGoalsSelected} />
-                                </Box>
-                            )}
-                            {roadmapData && (
-                                <Box id="roadmap-section">
-                                    <Roadmap roadmapData={roadmapData} resources={resources} />
-                                </Box>
-                            )}
-                            {moduleData && (
-                                <Box id="module-section">
-                                    <ModuleContent moduleData={moduleData} />
-                                </Box>
-                            )}
-                            {showConfirmButton && (
-                                <Box sx={{ display: 'flex', justifyContent: 'center', my: 4 }}>
-                                    <Button
-                                        variant="contained"
-                                        color="primary"
-                                        onClick={handleConfirmRoadmap}
-                                    >
-                                        Generate Detailed Content
-                                    </Button>
-                                </Box>
-                            )}
-                        </Container>
-                    } />
-                </Routes>
+            <Box sx={{ 
+                display: 'flex',
+                minHeight: '100vh',
+                transition: 'all 0.3s ease'
+            }}>
+                <Navigation />
+                <Box 
+                    component="main" 
+                    sx={{ 
+                        flexGrow: 1,
+                        p: 3,
+                        transition: 'margin-left 0.3s ease',
+                        marginLeft: isOpen ? '250px' : '80px',
+                        width: `calc(100% - ${isOpen ? '250px' : '80px'})`,
+                    }}
+                >
+                    <Routes>
+                        <Route path="/notebook" element={<NotebookView />} />
+                        <Route path="/saved" element={<SavedView />} />
+                        <Route path="/mini-module/:id" element={<MiniModuleView />} />
+                        <Route path="/" element={
+                            <Container maxWidth="lg">
+                                <LearningForm onSubmit={handleFormSubmit} />
+                                {goals.length > 0 && (
+                                    <Box id="goals-section">
+                                        <Goals goals={goals} onGoalsSelected={handleGoalsSelected} />
+                                    </Box>
+                                )}
+                                {roadmapData && (
+                                    <Box id="roadmap-section">
+                                        <Roadmap roadmapData={roadmapData} resources={resources} />
+                                    </Box>
+                                )}
+                                {moduleData && (
+                                    <Box id="module-section">
+                                        <ModuleContent moduleData={moduleData} />
+                                    </Box>
+                                )}
+                                {showConfirmButton && (
+                                    <Box sx={{ display: 'flex', justifyContent: 'center', my: 4 }}>
+                                        <Button
+                                            variant="contained"
+                                            color="primary"
+                                            onClick={handleConfirmRoadmap}
+                                        >
+                                            Generate Detailed Content
+                                        </Button>
+                                    </Box>
+                                )}
+                            </Container>
+                        } />
+                    </Routes>
+                </Box>
             </Box>
         </Router>
     );

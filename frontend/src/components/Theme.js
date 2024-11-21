@@ -1,4 +1,5 @@
 import { createTheme } from '@mui/material/styles';
+import { alignProperty } from '@mui/material/styles/cssUtils';
 
 const theme = createTheme({
   typography: {
@@ -38,12 +39,21 @@ const theme = createTheme({
     button: {
       fontFamily: 'Poppins',
       textTransform: 'none',
-      boxShadow: '0px 2px 8px -3px #00000080',
+      // boxShadow: '1px 0px 7px -3px #00000080',
       fontWeight: 'bold',
       padding: '0.3rem 1rem',
       margin: '.6rem .5rem .6rem .5rem',
       transition: 'all 0.2s ease-in-out',
-      borderRadius: '12px',
+      borderRadius: '8px',
+      display: 'flex',
+      alignItems: 'center',
+      '& span': {
+        verticalAlign: 'middle',
+      },
+      '&:hover': {
+        transform: 'translateY(-1px)',
+        transition: 'all 0.3s ease-in-out'
+      }
     },
     subtitle1: {
       fontSize: '1.3rem',
