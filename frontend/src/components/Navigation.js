@@ -31,6 +31,11 @@ const Navigation = () => {
     };
 
     const buttonSx2 = {
+        backgroundColor: theme.palette.primary.main,
+        color: theme.palette.background.main,
+        borderRadius: '50px',
+        padding: theme.typography.button.padding,
+        fontSize: theme.typography.button.fontSize,
         '&:hover': {
             backgroundColor: theme.palette.secondary.main,
             color: theme.palette.background.main,
@@ -75,15 +80,26 @@ const Navigation = () => {
                         onClick={() => window.location.href = '/notebook'}
                         sx={{
                             ...buttonSx2,
-                            backgroundColor: theme.palette.primary.main,
-                            color: theme.palette.background.main,
-                            borderRadius: '50px',
-                            padding: theme.typography.button.padding,
-                            fontSize: theme.typography.button.fontSize
                         }}
                     >
                         My Notebook
                     </Button>
+                    <Button 
+                        onClick={() => window.location.href = '/saved'}
+                        sx={{
+                            ...buttonSx2,
+                        }}
+                    >
+                        Saved Notes
+                    </Button>
+                    {/* <Button
+                        onClick={() => window.location.href = '/settings'}
+                        sx={{
+                            ...buttonSx2,
+                        }}
+                    >
+                        |||
+                    </Button> */}
                 </Box>
             </Toolbar>
         </AppBar>

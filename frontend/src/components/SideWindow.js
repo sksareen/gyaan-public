@@ -1,15 +1,16 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Box, Typography, CircularProgress, IconButton, List, ListItem } from '@mui/material';
-import CloseIcon from '@mui/icons-material/Close';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { formatMarkdownText } from '../utils/textFormatting';
 import InteractiveText from './InteractiveText';
-import BookmarkIcon from '@mui/icons-material/Bookmark';
-import BookmarkBorderIcon from '@mui/icons-material/BookmarkBorder';
 import { generateQuestions, generateExamples } from '../services/api';
 import QuestionPanel from './QuestionPanel';
+import { Box, Typography, CircularProgress, IconButton, Link } from '@mui/material';
+import CloseIcon from '@mui/icons-material/Close';
+import BookmarkIcon from '@mui/icons-material/Bookmark';
+import BookmarkBorderIcon from '@mui/icons-material/BookmarkBorder';
 import { useTheme } from '@mui/material/styles';
+import Paper from '@mui/material/Paper';
 
 const styles = {
     exampleBox: {
@@ -20,9 +21,10 @@ const styles = {
         marginBottom: 2
     },
     citationBox: {
-        marginTop: 1,
+        marginTop: 2,
         padding: 1,
-        borderTop: '1px solid #e0e0e0'
+        borderTop: '1px solid',
+        borderColor: 'divider'
     },
     citationLink: {
         color: 'primary.main',
@@ -56,6 +58,7 @@ const SideWindow = ({
   const [isFetchingExamples, setIsFetchingExamples] = useState(false);
   const [examplesError, setExamplesError] = useState(null);
   const [citations, setCitations] = useState([]);
+  const [savedExamples, setSavedExamples] = useState([]);
   const theme = useTheme();
   const contentRef = useRef(null);
 
@@ -64,6 +67,13 @@ const SideWindow = ({
     const savedExplanations = JSON.parse(localStorage.getItem(`explanations-${topic}`) || '[]');
     setIsSaved(savedExplanations.some(item => item.content === content));
   }, [content, topic]);
+
+  useEffect(() => {
+    if (topic) {
+      const saved = JSON.parse(localStorage.getItem(`examples-${topic}`) || '[]');
+      setSavedExamples(saved);
+    }
+  }, [topic]);
 
   const handleSave = () => {
     if (!content || !topic) return;
@@ -147,6 +157,7 @@ const SideWindow = ({
         borderRadius: '5px',
         boxShadow: '0px 4px 10px rgba(0, 0, 0, 0.1)',
         zIndex: 9999
+        
       }}
     >
       <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
@@ -222,40 +233,32 @@ const SideWindow = ({
                         
                         {citations.length > 0 && (
                           <Box sx={styles.citationBox}>
-                            <Typography variant="body2" color="text.secondary">
+                            <Typography variant="body2" color="text.secondary" gutterBottom>
                               Sources:
                             </Typography>
-                            {citations.map((citation, index) => (
-                              <Typography 
-                                key={index}
-                                variant="body2" 
-                                color="text.secondary"
-                                sx={{ 
+                            {citations.map((citation, idx) => (
+                              <Box 
+                                key={idx}
+                                sx={{
                                   display: 'flex',
                                   alignItems: 'center',
                                   gap: 1,
-                                  mt: 0.5
+                                  mb: 0.5
                                 }}
                               >
-                                <span>{index + 1}.</span>
-                                <a 
-                                  href={citation.url} 
-                                  target="_blank" 
+                                <Typography variant="body2" color="text.secondary">
+                                  {idx + 1}.
+                                </Typography>
+                                <Link
+                                  href={citation.url}
+                                  target="_blank"
                                   rel="noopener noreferrer"
-                                  style={{
-                                    color: theme.palette.primary.main,
-                                    textDecoration: 'none'
-                                  }}
-                                  onMouseOver={(e) => {
-                                    e.target.style.textDecoration = 'underline';
-                                  }}
-                                  onMouseOut={(e) => {
-                                    e.target.style.textDecoration = 'none';
-                                  }}
+                                  sx={styles.citationLink}
+                                  onClick={(e) => e.stopPropagation()}
                                 >
                                   {citation.text}
-                                </a>
-                              </Typography>
+                                </Link>
+                              </Box>
                             ))}
                           </Box>
                         )}

@@ -77,8 +77,10 @@ export const explainSentence = async (sentence, topic) => {
         });
         return response.data;
     } catch (error) {
-        console.error('Error in explainSentence:', error.response?.data || error.message);
-        throw error;
+        const errorMessage = error.response?.data?.error || 
+                           error.message || 
+                           'Connection to server failed';
+        throw new Error(`Explanation failed: ${errorMessage}`);
     }
 };
 
@@ -119,33 +121,38 @@ export const generateQuestions = async (text) => {
     }
 };
 
-export const generateExamples = async (text, topic) => {
+export const generateExamples = async (text, topic, useCached = true) => {
     try {
+        // Check local storage first
+        const storageKey = `examples-${topic}`;
+        const savedExamples = JSON.parse(localStorage.getItem(storageKey) || '[]');
+        const existingExample = savedExamples.find(ex => ex.text === text);
+
+        if (useCached && existingExample) {
+            return existingExample;
+        }
+
         const response = await api.post('/generate_examples', { 
             text,
-            topic 
+            topic,
+            useCached 
         });
         
-        let content = response.data?.choices?.[0]?.message?.content || '';
-        content = formatMarkdownText(content);
-        
-        // const words = content.split(' ');
-        // if (words.length > 100) {
-        //     content = words.slice(0, 100).join(' ') + '...';
-        // }
+        // The response should already be properly formatted from the backend
+        const exampleData = response.data;
 
-        const citations = (response.data?.citations || []).map(url => ({
-            text: new URL(url).hostname,
-            url: url
-        }));
+        // Save to localStorage if we have valid data
+        if (exampleData.examples && exampleData.examples[0].description) {
+            const existingIndex = savedExamples.findIndex(ex => ex.text === text);
+            if (existingIndex >= 0) {
+                savedExamples[existingIndex] = exampleData;
+            } else {
+                savedExamples.push(exampleData);
+            }
+            localStorage.setItem(storageKey, JSON.stringify(savedExamples));
+        }
 
-        return {
-            examples: [{
-                description: content || 'Example not available',
-                type: 'Real-world Example'
-            }],
-            citations
-        };
+        return exampleData;
     } catch (error) {
         console.error('API Error:', error);
         throw error;

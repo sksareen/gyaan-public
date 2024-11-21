@@ -9,6 +9,7 @@ import { formatMarkdownText } from '../utils/textFormatting';
 import remarkGfm from 'remark-gfm';
 import QuestionPanel from './QuestionPanel';
 import SideWindow from './SideWindow';
+import Link from '@mui/material/Link';
 
 const MiniModuleView = () => {
   const { id } = useParams();
@@ -55,7 +56,7 @@ const MiniModuleView = () => {
       if (isFirstParagraph) {
         return (
           <Typography 
-            variant="h4"
+            variant="h1"
             component="h1" 
             sx={{ mb: 3, fontWeight: 'bold' }}
           >

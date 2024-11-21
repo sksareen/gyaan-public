@@ -85,8 +85,11 @@ const InteractiveText = ({ children, topic, level = 0 }) => {
       const data = await explainSentence(text, effectiveTopic);
       return formatMarkdownText(data.explanation);
     } catch (error) {
+      const errorMessage = error.message.includes('Explanation failed') 
+        ? error.message 
+        : 'Unable to connect to the server. Please check your connection and try again.';
       console.error('Error fetching explanation:', error);
-      throw new Error('Failed to fetch explanation. Please try again.');
+      throw new Error(errorMessage);
     }
   };
 

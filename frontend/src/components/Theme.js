@@ -23,6 +23,10 @@ const theme = createTheme({
       fontWeight: 600,
       paddingTop: '1.5rem',
     },
+    h5: {
+      fontSize: '1.1rem',
+      fontWeight: 600,
+    },
     body1: {
       fontSize: '1rem',
       lineHeight: 1.6,

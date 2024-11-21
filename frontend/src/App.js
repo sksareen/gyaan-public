@@ -11,6 +11,7 @@ import NotebookView from './components/NotebookView';
 import ModuleViewer from './components/ModuleViewer';
 import LearningCard from './components/LearningCard';
 import MiniModuleView from './components/MiniModuleView';
+import SavedView from './components/SavedView';
 
 function App() {
     const [loading, setLoading] = useState(false);
@@ -137,7 +138,7 @@ function App() {
             <Box sx={{ pt: '64px' }}>
                 <Routes>
                     <Route path="/notebook" element={<NotebookView />} />
-                    {/* <Route path="/module/:moduleId" element={<ModuleViewer />} /> */}
+                    <Route path="/saved" element={<SavedView />} />
                     <Route path="/mini-module/:id" element={<MiniModuleView />} />
                     <Route path="/" element={
                         <Container maxWidth="lg">

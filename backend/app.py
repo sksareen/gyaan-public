@@ -900,11 +900,19 @@ def generate_examples():
     data = request.get_json()
     text = data.get('text', '')
     topic = data.get('topic', '')
+    cached = data.get('useCached', True)  # New parameter to control cache usage
 
     if not text:
         return jsonify({'error': 'Missing text'}), 400
 
     try:
+        # Check cache first if enabled
+        cache_key = f"example_{topic}_{hash(text)}"
+        if cached:
+            cached_response = app.config.get(cache_key)
+            if cached_response:
+                return jsonify(cached_response)
+
         headers = {
             'Authorization': f'Bearer {os.getenv("PERPLEXITY_API_KEY")}',
             'Content-Type': 'application/json',
@@ -919,7 +927,7 @@ def generate_examples():
                 },
                 {
                     "role": "user",
-                    "content": f"Find a specific real-world example of this concept from {topic}: '{text}'. Keep the example under 100 words and include citation numbers in the text that match the returned citations."
+                    "content": f"Find a specific real-world example of this concept from {topic}: '{text}'. Keep the example under 100 words and include citation numbers in the text that match the returned citations. maximum 3 paragraphs."
                 }
             ],
             "max_tokens": 1000,
@@ -944,31 +952,43 @@ def generate_examples():
         content = response_json.get('choices', [{}])[0].get('message', {}).get('content', '')
         citations = response_json.get('citations', [])
 
-        # Log the processed data
-        print("Content:", content)
-        print("Citations:", citations)
+        # Format citations properly
+        formatted_citations = []
+        for url in citations:
+            try:
+                # Extract domain name for display text
+                from urllib.parse import urlparse
+                parsed_url = urlparse(url)
+                display_text = parsed_url.netloc.replace('www.', '')
+                formatted_citations.append({
+                    'text': display_text,
+                    'url': url
+                })
+            except Exception as e:
+                logger.error(f"Error formatting citation URL {url}: {str(e)}")
+                continue
 
-        example_data = {
-            'choices': [{
-                'message': {
-                    'content': content or 'No example available'
-                }
+        # Create response data
+        response_data = {
+            'examples': [{
+                'description': content,
+                'type': 'Real-world Example',
+                'timestamp': datetime.now().isoformat(),
+                'text': text,
+                'topic': topic
             }],
-            'citations': citations or []
+            'citations': formatted_citations  # Use the formatted citations
         }
+        
+        # Cache the response
+        app.config[cache_key] = response_data
+        return jsonify(response_data)
 
-        return jsonify(example_data)
-
-    except Exception as e:
-        logger.error(f"Error generating example: {str(e)}")
+    except Exception as error:
+        logger.error(f"Error generating example: {str(error)}")
         return jsonify({
-            'choices': [{
-                'message': {
-                    'content': f'Error generating example: {str(e)}'
-                }
-            }],
-            'citations': []
-        })
+            'error': str(error)
+        }), 500
 
 
 if __name__ == '__main__':
