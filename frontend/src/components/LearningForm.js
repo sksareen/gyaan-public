@@ -12,7 +12,7 @@ import {
 } from '@mui/material';
 import { ThemeProvider, useTheme } from '@mui/material/styles';
 import theme from './Theme';
-import { generateGoals } from '../services/api';
+import { generateGoals, generateMiniModule } from '../services/api';
 
 const LearningForm = ({ onSubmit }) => {
     const [topic, setTopic] = useState('');
@@ -31,15 +31,22 @@ const LearningForm = ({ onSubmit }) => {
         setError('');
 
         try {
-            await onSubmit(topic.trim(), proficiency);
-            setTimeout(() => {
-                window.scrollTo({
-                    top: window.innerHeight,
-                    behavior: 'smooth'
-                });
-            }, 100);
+            const response = await generateMiniModule(topic.trim(), proficiency);
+            
+            const savedModules = JSON.parse(localStorage.getItem('savedModules') || '[]');
+            const newModule = {
+                id: Date.now(),
+                topic: topic.trim(),
+                type: 'mini-module',
+                content: response,
+                createdAt: new Date().toISOString()
+            };
+            
+            localStorage.setItem('savedModules', JSON.stringify([...savedModules, newModule]));
+            
+            window.location.href = `/mini-module/${newModule.id}`;
         } catch (err) {
-            setError(err.message || 'Failed to generate learning goals. Please try again.');
+            setError(err.message || 'Failed to generate learning content. Please try again.');
             console.error('Error:', err);
         } finally {
             setLoading(false);

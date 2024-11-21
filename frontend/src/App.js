@@ -4,7 +4,7 @@ import LearningForm from './components/LearningForm';
 import Roadmap from './components/Roadmap';
 import ModuleContent from './components/ModuleContent';
 import Goals from './components/Goals';
-import { generateRoadmap, generateModuleContent, generateGoals, generateLearningCards } from './services/api';
+import { generateRoadmap, generateModuleContent, generateGoals, generateLearningCards, generateMiniModule } from './services/api';
 import Navigation from './components/Navigation';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import NotebookView from './components/NotebookView';
@@ -27,26 +27,23 @@ function App() {
         return saved ? JSON.parse(saved) : [];
     });
     const [selectedGoals, setSelectedGoals] = useState([]);
-    const [learningCards, setLearningCards] = useState([]); // Add state for learning cards
+    const [learningCards, setLearningCards] = useState([]);
     const [miniModuleLoading, setMiniModuleLoading] = useState(false);
 
     const handleFormSubmit = async (topic, proficiency) => {
         setLoading(true);
-        setLoadingType('learningCards');
+        setLoadingType('module');
         try {
-            const data = await generateLearningCards(topic, proficiency);
-            
-            if (!data.cards || !Array.isArray(data.cards)) {
-                throw new Error('Invalid response format');
-            }
-            
+            const moduleResponse = await generateMiniModule(topic, proficiency);
             setCurrentTopic(topic);
             setCurrentProficiency(proficiency);
-            setLearningCards(data.cards);
+            
+            // Save module and navigate
+            const moduleId = saveModule(moduleResponse);
+            window.location.href = `/mini-module/${moduleId}`;
         } catch (error) {
-            console.error('Error generating learning cards:', error);
-            // Show error message to user
-            alert('Failed to generate learning cards. Please try again.');
+            console.error('Error generating module:', error);
+            alert('Failed to generate module. Please try again.');
         } finally {
             setLoading(false);
             setLoadingType('');
@@ -112,7 +109,7 @@ function App() {
 
     return (
         <Router>
-            {(loading || miniModuleLoading) && (
+            {loading && (
                 <Box
                     sx={{
                         position: 'fixed',
@@ -133,7 +130,6 @@ function App() {
                         {loadingType === 'goals' && 'Generating learning goals...'}
                         {loadingType === 'roadmap' && 'Creating your personalized roadmap...'}
                         {loadingType === 'module' && 'Preparing detailed learning content...'}
-                        {miniModuleLoading && 'Loading module content...'}
                     </Typography>
                 </Box>
             )}
@@ -146,24 +142,6 @@ function App() {
                     <Route path="/" element={
                         <Container maxWidth="lg">
                             <LearningForm onSubmit={handleFormSubmit} />
-                            {learningCards.length > 0 && (
-                                <Box sx={{ 
-                                    display: 'flex', 
-                                    flexWrap: 'wrap', 
-                                    justifyContent: 'center',
-                                    mt: 4 
-                                }}>
-                                    {learningCards.map(card => (
-                                        <LearningCard
-                                            key={card.id}
-                                            title={card.title}
-                                            description={card.description}
-                                            type={card.type}
-                                            setMiniModuleLoading={setMiniModuleLoading}
-                                        />
-                                    ))}
-                                </Box>
-                            )}
                             {goals.length > 0 && (
                                 <Box id="goals-section">
                                     <Goals goals={goals} onGoalsSelected={handleGoalsSelected} />

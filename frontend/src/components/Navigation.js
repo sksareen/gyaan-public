@@ -56,20 +56,7 @@ const Navigation = () => {
         >
             <Toolbar>
                 <Box sx={{ display: 'flex', gap: 2, margin: '0 auto' }}>
-                    <Button 
-                        onClick={() => window.location.href = '/notebook'}
-                        sx={{
-                            ...buttonSx2,
-                            backgroundColor: theme.palette.primary.main,
-                            color: theme.palette.background.main,
-                            borderRadius: '50px',
-                            padding: theme.typography.button.padding,
-                            fontSize: theme.typography.button.fontSize
-                        }}
-                    >
-                        My Notebook
-                    </Button>
-                    <Button 
+                <Button 
                         onClick={() => window.location.href = '/'}
                         sx={{
                             ...buttonSx,
@@ -82,7 +69,20 @@ const Navigation = () => {
                             color: theme.palette.primary.main
                         }}
                     >
-                        + Create
+                        + New Journey
+                    </Button>
+                    <Button 
+                        onClick={() => window.location.href = '/notebook'}
+                        sx={{
+                            ...buttonSx2,
+                            backgroundColor: theme.palette.primary.main,
+                            color: theme.palette.background.main,
+                            borderRadius: '50px',
+                            padding: theme.typography.button.padding,
+                            fontSize: theme.typography.button.fontSize
+                        }}
+                    >
+                        My Notebook
                     </Button>
                 </Box>
             </Toolbar>
