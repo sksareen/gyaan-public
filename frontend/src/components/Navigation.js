@@ -6,6 +6,7 @@ import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import LibraryBooksIcon from '@mui/icons-material/LibraryBooks';
 import BookmarkIcon from '@mui/icons-material/Bookmark';
 import AddCircle from '@mui/icons-material/AddCircle';
+import SettingsIcon from '@mui/icons-material/Settings';
 
 const Navigation = ({ isOpen, setIsOpen }) => {
     const theme = useTheme();
@@ -49,6 +50,10 @@ const Navigation = ({ isOpen, setIsOpen }) => {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
+        borderRadius: isOpen ? '8px' : '50%',
+        width: isOpen ? (isMobile ? '60px' : '85%') : '40px',
+        height: '40px',
+        minWidth: isMobile ? '60px' : (isOpen ? 'auto' : '40px'),
         '&:hover': {
             backgroundColor: theme.palette.secondary.main,
             color: theme.palette.background.main
@@ -61,6 +66,10 @@ const Navigation = ({ isOpen, setIsOpen }) => {
         padding: theme.typography.button.padding,
         fontSize: theme.typography.button.fontSize,
         textWrap: 'nowrap',
+        borderRadius: isOpen ? '8px' : '50%',
+        width: isOpen ? (isMobile ? '60px' : '85%') : '40px',
+        height: '40px',
+        minWidth: isMobile ? '60px' : (isOpen ? 'auto' : '40px'),
         '&:hover': {
             backgroundColor: theme.palette.secondary.main,
             color: theme.palette.background.main,
@@ -129,8 +138,6 @@ const Navigation = ({ isOpen, setIsOpen }) => {
                             title="New Journey"
                             sx={{
                                 ...buttonSx,
-                                width: isMobile ? '60px' : '100%',
-                                minWidth: isMobile ? '60px' : 'auto',
                                 color: isMobile ? theme.palette.background.main : (isOpen ? theme.palette.primary.main : theme.palette.background.main),
                                 backgroundColor: isMobile ? 'transparent' : (isOpen ? theme.palette.background.main : theme.palette.primary.main)
                             }}
@@ -144,8 +151,6 @@ const Navigation = ({ isOpen, setIsOpen }) => {
                             title="My Notebook"
                             sx={{
                                 ...buttonSx2,
-                                width: isMobile ? '60px' : '100%',
-                                minWidth: isMobile ? '60px' : 'auto',
                             }}
                         >
                             <span>
@@ -160,8 +165,6 @@ const Navigation = ({ isOpen, setIsOpen }) => {
                             title="Saved Notes"
                             sx={{
                                 ...buttonSx2,
-                                width: isMobile ? '60px' : '100%',
-                                minWidth: isMobile ? '60px' : 'auto',
                             }}
                         >
                             <span>
@@ -171,16 +174,28 @@ const Navigation = ({ isOpen, setIsOpen }) => {
                                 </Box>
                             </span>
                         </Button>
+                        <Button 
+                            onClick={() => window.location.href = '/settings'}
+                            title="Settings"
+                            sx={{
+                                ...buttonSx2,
+                            }}
+                        >
+                            <span>
+                                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                                    <SettingsIcon sx={{ mr: isOpen ? 1 : 0 }} />
+                                    {isOpen && 'Settings'}
+                                </Box>
+                            </span>
+                        </Button>
                     </Box>
                 </Toolbar>
                 {!isMobile && (
                     <IconButton
                         onClick={() => setIsOpen(!isOpen)}
                         sx={{
+                            ...buttonSx2,
                             position: 'relative',
-                            width: isOpen ? '85%' : '40px',
-                            borderRadius: isOpen ? '8px' : '50%',
-                            height: '40px',
                             bottom: '30px',
                             right: '-50%',
                             transform: 'translateX(-50%)',
