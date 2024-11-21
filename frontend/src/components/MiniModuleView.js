@@ -55,12 +55,19 @@ const MiniModuleView = () => {
       
       if (isFirstParagraph) {
         return (
-          <Typography 
-            variant="h1"
+          <Typography
+            variant="h4"
             component="h1" 
-            sx={{ mb: 3, fontWeight: 'bold' }}
+            sx={{ p: 0, fontWeight: 'bold', textAlign: 'center' }}
           >
-            {children}
+              You're learning: <br></br>
+            <Typography 
+            variant="h2"
+            component="h1" 
+            sx={{ mb: 3, fontWeight: 'bold', textAlign: 'center' }}
+          >
+              {formatMarkdownText(moduleData?.topic.charAt(0).toUpperCase() + moduleData?.topic.slice(1))}
+            </Typography>
           </Typography>
         );
       }

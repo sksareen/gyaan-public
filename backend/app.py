@@ -913,8 +913,12 @@ def generate_examples():
             if cached_response:
                 return jsonify(cached_response)
 
+        perplexity_key = os.getenv('PERPLEXITY_API_KEY')
+        if not perplexity_key:
+            return jsonify({'error': 'Perplexity API key not configured'}), 400
+
         headers = {
-            'Authorization': f'Bearer {os.getenv("PERPLEXITY_API_KEY")}',
+            'Authorization': f'Bearer {perplexity_key}',
             'Content-Type': 'application/json',
         }
 
@@ -990,6 +994,62 @@ def generate_examples():
             'error': str(error)
         }), 500
 
+# Add new route to get/set API keys
+@app.route('/api/settings', methods=['GET', 'POST'])
+def handle_settings():
+    if request.method == 'POST':
+        data = request.get_json()
+        try:
+            # Update the API clients with new keys
+            if 'claude' in data:
+                os.environ['ANTHROPIC_API_KEY'] = data['claude']
+                client = anthropic.Anthropic(api_key=data['claude'])
+            
+            if 'perplexity' in data:
+                os.environ['PERPLEXITY_API_KEY'] = data['perplexity']
+            
+            # Store keys securely (consider using a more secure storage in production)
+            with open('.env', 'w') as f:
+                if 'claude' in data:
+                    f.write(f"ANTHROPIC_API_KEY={data['claude']}\n")
+                if 'perplexity' in data:
+                    f.write(f"PERPLEXITY_API_KEY={data['perplexity']}\n")
+            
+            return jsonify({"message": "Settings updated successfully"})
+        except Exception as e:
+            return jsonify({"error": str(e)}), 500
+    
+    elif request.method == 'GET':
+        # Return masked versions of current keys
+        def mask_key(key):
+            if not key:
+                return ''
+            return f"{key[:5]}...{key[-5:]}" if len(key) > 10 else key
+        
+        return jsonify({
+            "claude": mask_key(os.getenv('ANTHROPIC_API_KEY')),
+            "perplexity": mask_key(os.getenv('PERPLEXITY_API_KEY'))
+        })
+
+# Modify the initialization of API clients
+def initialize_api_clients():
+    global client, exa
+    try:
+        anthropic_key = os.getenv('ANTHROPIC_API_KEY')
+        perplexity_key = os.getenv('PERPLEXITY_API_KEY')
+        
+        if anthropic_key:
+            client = anthropic.Anthropic(api_key=anthropic_key)
+        if perplexity_key:
+            # Update headers in generate_examples function
+            pass  # The headers are already set in the function
+            
+    except Exception as e:
+        logger.error(f"Error initializing API clients: {str(e)}")
+        raise
+
+# Call initialize_api_clients when the app starts
+initialize_api_clients()
 
 if __name__ == '__main__':
     print('[app.py] __main__ starting')

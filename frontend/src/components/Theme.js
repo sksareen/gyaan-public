@@ -36,6 +36,13 @@ const theme = createTheme({
       fontSize: '0.875rem',
       lineHeight: 1.5,
     },
+    body3: {
+      fontSize: '0.9rem',
+      lineHeight: 1.5,
+      paddingBottom: '1rem',
+      fontStyle: 'italic',
+      fontFamily: 'Lato'
+    },
     button: {
       fontFamily: 'Poppins',
       textTransform: 'none',

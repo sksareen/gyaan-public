@@ -8,10 +8,11 @@ import { generateRoadmap, generateModuleContent, generateGoals, generateLearning
 import Navigation from './components/Navigation';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import NotebookView from './components/NotebookView';
-import ModuleViewer from './components/ModuleViewer';
-import LearningCard from './components/LearningCard';
+// import ModuleViewer from './components/ModuleViewer';
+// import LearningCard from './components/LearningCard';
 import MiniModuleView from './components/MiniModuleView';
 import SavedView from './components/SavedView';
+import Settings from './components/Settings';
 
 function App() {
     const [loading, setLoading] = useState(false);
@@ -171,6 +172,7 @@ function App() {
                         <Route path="/notebook" element={<NotebookView />} />
                         <Route path="/saved" element={<SavedView />} />
                         <Route path="/mini-module/:id" element={<MiniModuleView />} />
+                        <Route path="/settings" element={<Settings />} />
                         <Route path="/" element={
                             <Container maxWidth="lg" sx={{ p: 0 }}>
                                 <LearningForm onSubmit={handleFormSubmit} />
