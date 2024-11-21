@@ -67,7 +67,7 @@ const MiniModuleView = () => {
             sx={{ mb: 3, fontWeight: 'bold', textAlign: 'center' }}
           >
               {formatMarkdownText(moduleData?.topic.charAt(0).toUpperCase() + moduleData?.topic.slice(1))}
-            </Typography>sdf
+            </Typography>
           </Typography>
         );
       }
