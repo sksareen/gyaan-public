@@ -1,10 +1,12 @@
 import axios from 'axios';
 import { formatMarkdownText } from '../utils/textFormatting';
 
+const baseURL = process.env.NODE_ENV === 'production'
+    ? 'https://gyaan-public.onrender.com'  // Replace with your Render URL
+    : 'http://localhost:5001';
+
 export const api = axios.create({
-    baseURL: process.env.NODE_ENV === 'production' 
-        ? '/api'  // Production path
-        : 'http://localhost:5001', // Development path
+    baseURL,
     headers: {
         'Content-Type': 'application/json'
     }

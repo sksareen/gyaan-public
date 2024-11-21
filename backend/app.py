@@ -35,7 +35,11 @@ if missing_vars:
 app = Flask(__name__)
 CORS(app, resources={
     r"/*": {
-        "origins": ["http://localhost:3000"],
+        "origins": [
+            "http://localhost:3000",
+            "https://*.vercel.app",  # Your Vercel frontend domain
+            "https://*.your-domain.com"
+        ],
         "methods": ["GET", "POST", "OPTIONS"],
         "allow_headers": ["Content-Type", "Authorization"],
         "supports_credentials": True
