@@ -7,9 +7,18 @@ import LibraryBooksIcon from '@mui/icons-material/LibraryBooks';
 import BookmarkIcon from '@mui/icons-material/Bookmark';
 import AddCircle from '@mui/icons-material/AddCircle';
 
-const Navigation = () => {
+const Navigation = ({ isOpen, setIsOpen }) => {
     const theme = useTheme();
-    const [isOpen, setIsOpen] = useState(false);
+    const [isMobile, setIsMobile] = useState(window.innerWidth <= 430);
+
+    React.useEffect(() => {
+        const handleResize = () => {
+            setIsMobile(window.innerWidth <= 430);
+        };
+
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
 
     const scrollToSection = (elementId) => {
         setTimeout(() => {
@@ -51,6 +60,7 @@ const Navigation = () => {
         color: theme.palette.background.main,
         padding: theme.typography.button.padding,
         fontSize: theme.typography.button.fontSize,
+        textWrap: 'nowrap',
         '&:hover': {
             backgroundColor: theme.palette.secondary.main,
             color: theme.palette.background.main,
@@ -62,74 +72,80 @@ const Navigation = () => {
             <AppBar 
                 position="fixed" 
                 sx={{
-                    width: isOpen ? '220px' : '90px',
-                    height: '100vh',
+                    width: isMobile ? '100%' : (isOpen ? '220px' : '80px'),
+                    height: isMobile ? '80px' : '100vh',
                     backgroundColor: theme.palette.primary.main,
                     backdropFilter: 'blur(8px)',
                     color: theme.components.MuiTypography.styleOverrides.root.color,
                     fontWeight: 'bold',
                     fontFamily: theme.typography.fontFamily,
-                    boxShadow: '1px 0px 5px 1px #00000050',
+                    boxShadow: isMobile ? '0px -1px 5px 1px #00000050' : '1px 0px 5px 1px #00000050',
                     left: 0,
                     right: 'auto',
+                    bottom: isMobile ? 0 : 'auto',
+                    top: isMobile ? 'auto' : 0,
                     transition: 'width 0.3s ease',
-                    position: 'fixed', // Change to relative
                     zIndex: theme.zIndex.drawer,
                 }}
             >
-
                 <Toolbar sx={{ 
-                    flexDirection: 'column', 
-                    height: '100vh', 
+                    flexDirection: isMobile ? 'row' : 'column', 
+                    height: isMobile ? '80px' : '100vh', 
                     gap: 2, 
-                    pt: 4,
+                    pt: isMobile ? 0 : 4,
+                    justifyContent: 'space-around',
                 }}>
                     <Box sx={{ 
                         display: 'flex', 
-                        flexDirection: 'column', 
+                        flexDirection: isMobile ? 'row' : 'column', 
                         gap: 2, 
                         width: '100%',
                         alignItems: 'center',
+                        justifyContent: 'space-around',
                     }}>
-                        <Box sx={{ mt: 4, mb: 4 }}>
-                            <img src="logo.png" alt="logo" 
-                                style={{ 
-                                    borderRadius: '50%',
-                                    height: isOpen ? '100px' : '60px',
-                                    width: isOpen ? '100px' : '60px', 
-                                    marginBottom: isOpen ? '10px' : '40px',
-                                    marginLeft: 'auto', 
-                                    marginRight: 'auto', 
-                                    display: 'block', 
-                                    margin: '0 auto', 
-                                    transition: 'all 0.3s ease',
-                                    boxShadow: '0px 1px 8px -3px #00000080', 
-                                }}/>
-                        </Box>
+                        {!isMobile && (
+                            <>
+                                <Box sx={{ mt: 4, mb: 4 }}>
+                                    <img src="logo.png" alt="logo" title="Gyaan Learning"
+                                        style={{ 
+                                            borderRadius: '50%',
+                                            height: isOpen ? '120px' : '60px',
+                                            width: isOpen ? '120px' : '60px', 
+                                            marginBottom: isOpen ? '10px' : '70px',
+                                            marginLeft: 'auto', 
+                                            marginRight: 'auto', 
+                                            display: 'block', 
+                                            margin: '0 auto', 
+                                            transition: 'all 0.3s ease',
+                                            boxShadow: '1px 0px 6px -3px #00000080',
+                                        }}/>
+                                </Box>
+                                <hr style={{ width: '90%', border: '.5px solid #fff', margin: '.5rem 0' }} />
+                            </>
+                        )}
+                        
                         <Button 
                             onClick={() => window.location.href = '/'}
                             title="New Journey"
                             sx={{
                                 ...buttonSx,
-                                width: '100%',
-                                color: isOpen ? theme.palette.primary.main : theme.palette.background.main,
-                                backgroundColor: isOpen ? theme.palette.background.main : theme.palette.primary.main
+                                width: isMobile ? '60px' : '100%',
+                                minWidth: isMobile ? '60px' : 'auto',
+                                color: isMobile ? theme.palette.background.main : (isOpen ? theme.palette.primary.main : theme.palette.background.main),
+                                backgroundColor: isMobile ? 'transparent' : (isOpen ? theme.palette.background.main : theme.palette.primary.main)
                             }}
                         >
-                            <span>
-                                <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                                    <AddCircle sx={{ ml: isOpen ? 1 : 0, padding: '0px 4px', fontSize: isOpen ? '1.6rem' : '2rem' }} /> {/* Increased size */}
-                                    {isOpen && 'New Journey'}
-                                </Box>
-                            </span>
+                            <AddCircle sx={{ fontSize: isMobile ? '2rem' : (isOpen ? '1.6rem' : '2rem') }} />
+                            {!isMobile && isOpen && 'New Journey'}
                         </Button>
-                        <hr style={{ width: '90%', border: '.5px solid #fff', margin: '.5rem 0' }} />
+                        
                         <Button 
                             onClick={() => window.location.href = '/notebook'}
                             title="My Notebook"
                             sx={{
                                 ...buttonSx2,
-                                width: '100%'
+                                width: isMobile ? '60px' : '100%',
+                                minWidth: isMobile ? '60px' : 'auto',
                             }}
                         >
                             <span>
@@ -144,7 +160,8 @@ const Navigation = () => {
                             title="Saved Notes"
                             sx={{
                                 ...buttonSx2,
-                                width: '100%'
+                                width: isMobile ? '60px' : '100%',
+                                minWidth: isMobile ? '60px' : 'auto',
                             }}
                         >
                             <span>
@@ -156,32 +173,34 @@ const Navigation = () => {
                         </Button>
                     </Box>
                 </Toolbar>
-                <IconButton
-                    onClick={() => setIsOpen(!isOpen)}
-                    sx={{
-                        position: 'relative',
-                        width: isOpen ? '70%' : '40px',
-                        borderRadius: isOpen ? '8px' : '50%',
-                        height: '40px',
-                        bottom: '40px',
-                        right: '-50%',
-                        transform: 'translateX(-50%)',
-                        fontSize: '1rem',
-                        fontFamily: theme.typography.fontFamily,
-                        fontWeight: 'bold',
-                        // backgroundColor: theme.palette.background.main,
-                        color: theme.palette.background.main,
-                        // boxShadow: '0px 1px 7px -3px #00000080',
-                        '&:hover': {
-                            backgroundColor: theme.palette.secondary.main,
+                {!isMobile && (
+                    <IconButton
+                        onClick={() => setIsOpen(!isOpen)}
+                        sx={{
+                            position: 'relative',
+                            width: isOpen ? '85%' : '40px',
+                            borderRadius: isOpen ? '8px' : '50%',
+                            height: '40px',
+                            bottom: '30px',
+                            right: '-50%',
+                            transform: 'translateX(-50%)',
+                            fontSize: '1rem',
+                            fontFamily: theme.typography.fontFamily,
+                            fontWeight: 'bold',
+                            // backgroundColor: theme.palette.background.main,
                             color: theme.palette.background.main,
-                            // boxShadow: '0px 2px 8px -3px #ffffff80',
-                        },
-                        zIndex: 1,
-                    }}
-                >
-                    {isOpen ? <><ChevronLeftIcon /> Collapse</> : <ChevronRightIcon />}
-                </IconButton>
+                            // boxShadow: '0px 1px 7px -3px #00000080',
+                            '&:hover': {
+                                backgroundColor: theme.palette.secondary.main,
+                                color: theme.palette.background.main,
+                                // boxShadow: '0px 2px 8px -3px #ffffff80',
+                            },
+                            zIndex: 1,
+                        }}
+                    >
+                        {isOpen ? <><ChevronLeftIcon />  Collapse</> : <ChevronRightIcon />}
+                    </IconButton>
+                )}
             </AppBar>
         </>
     );

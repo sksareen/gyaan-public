@@ -31,6 +31,16 @@ function App() {
     const [learningCards, setLearningCards] = useState([]);
     const [miniModuleLoading, setMiniModuleLoading] = useState(false);
     const [isOpen, setIsOpen] = useState(false);
+    const [isMobile, setIsMobile] = useState(window.innerWidth <= 430);
+
+    useEffect(() => {
+        const handleResize = () => {
+            setIsMobile(window.innerWidth <= 430);
+        };
+
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
 
     const handleFormSubmit = async (topic, proficiency) => {
         setLoading(true);
@@ -140,15 +150,21 @@ function App() {
                 minHeight: '100vh',
                 transition: 'all 0.3s ease'
             }}>
-                <Navigation />
+                <Navigation isOpen={isOpen} setIsOpen={setIsOpen} />
                 <Box 
                     component="main" 
                     sx={{ 
                         flexGrow: 1,
                         p: 3,
                         transition: 'margin-left 0.3s ease',
-                        marginLeft: isOpen ? '250px' : '80px',
-                        width: `calc(100% - ${isOpen ? '250px' : '80px'})`,
+                        ...(isMobile ? {
+                            marginLeft: 0,
+                            width: '100%',
+                            paddingBottom: '80px', // Add space for mobile footer
+                        } : {
+                            marginLeft: isOpen ? '250px' : '80px',
+                            width: `calc(100% - ${isOpen ? '250px' : '80px'})`,
+                        }),
                     }}
                 >
                     <Routes>
@@ -156,7 +172,7 @@ function App() {
                         <Route path="/saved" element={<SavedView />} />
                         <Route path="/mini-module/:id" element={<MiniModuleView />} />
                         <Route path="/" element={
-                            <Container maxWidth="lg">
+                            <Container maxWidth="lg" sx={{ p: 0 }}>
                                 <LearningForm onSubmit={handleFormSubmit} />
                                 {goals.length > 0 && (
                                     <Box id="goals-section">
