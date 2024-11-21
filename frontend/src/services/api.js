@@ -123,31 +123,45 @@ export const generateQuestions = async (text) => {
 
 export const generateExamples = async (text, topic, useCached = true) => {
     try {
-        // Check local storage first
+        // Validate required parameters
+        if (!text || !topic) {
+            throw new Error('Missing required parameters: text and topic');
+        }
+
         const storageKey = `examples-${topic}`;
         const savedExamples = JSON.parse(localStorage.getItem(storageKey) || '[]');
+        
+        // Check localStorage first
         const existingExample = savedExamples.find(ex => ex.text === text);
-
         if (useCached && existingExample) {
-            return existingExample;
+            return { examples: [existingExample] };
         }
 
         const response = await api.post('/generate_examples', { 
-            text,
-            topic,
+            text: text.trim(),
+            topic: topic.trim(),
             useCached 
         });
         
-        // The response should already be properly formatted from the backend
         const exampleData = response.data;
+        
+        // Add timestamp if not present
+        if (exampleData.examples && exampleData.examples[0]) {
+            exampleData.examples[0].timestamp = exampleData.examples[0].timestamp || new Date().toISOString();
+        }
 
-        // Save to localStorage if we have valid data
-        if (exampleData.examples && exampleData.examples[0].description) {
+        // Save to localStorage
+        if (exampleData.examples && exampleData.examples[0]) {
+            const newExample = {
+                ...exampleData.examples[0],
+                citations: exampleData.citations || []
+            };
+            
             const existingIndex = savedExamples.findIndex(ex => ex.text === text);
             if (existingIndex >= 0) {
-                savedExamples[existingIndex] = exampleData;
+                savedExamples[existingIndex] = newExample;
             } else {
-                savedExamples.push(exampleData);
+                savedExamples.push(newExample);
             }
             localStorage.setItem(storageKey, JSON.stringify(savedExamples));
         }

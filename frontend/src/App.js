@@ -13,6 +13,9 @@ import NotebookView from './components/NotebookView';
 import MiniModuleView from './components/MiniModuleView';
 import SavedView from './components/SavedView';
 import Settings from './components/Settings';
+import FeedbackIcon from '@mui/icons-material/Feedback';
+import IconButton from '@mui/material/IconButton';
+import Tooltip from '@mui/material/Tooltip';
 
 function App() {
     const [loading, setLoading] = useState(false);
@@ -122,6 +125,27 @@ function App() {
 
     return (
         <Router>
+            <IconButton
+                component="a"
+                href="https://docs.google.com/forms/d/e/1FAIpQLSdKRfCx1cS7ukmUOHArA_akrzXvKYby2QxAVOVpMlncGmWGDQ/viewform?usp=sf_link"
+                target="_blank"
+                rel="noopener noreferrer"
+                sx={{
+                    position: 'fixed',
+                    top: 16,
+                    right: 16,
+                    zIndex: 9999,
+                    backgroundColor: 'primary.main',
+                    color: 'white',
+                    '&:hover': {
+                        backgroundColor: 'primary.dark',
+                    },
+                }}
+            >
+                <Tooltip title="Give Feedback">
+                    <FeedbackIcon />
+                </Tooltip>
+            </IconButton>
             {loading && (
                 <Box
                     sx={{

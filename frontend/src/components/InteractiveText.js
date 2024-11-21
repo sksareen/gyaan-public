@@ -192,6 +192,7 @@ const InteractiveText = ({ children, topic, level = 0 }) => {
             transform: 'translateY(8px)', // Small offset from the text
             zIndex: 1000,
             backgroundColor: 'primary.main',
+            color: '#fff',
             '&:hover': {
               backgroundColor: 'primary.dark',
             },

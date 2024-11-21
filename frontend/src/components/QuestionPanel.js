@@ -64,7 +64,7 @@ const QuestionPanel = ({ topic, onExplanationReceived, questions = [], level }) 
           <Box sx={{ 
             display: 'grid',
             gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
-            gap: 2,
+            gap: 1,
             width: '100%'
           }}>
             {questions.map((questionText, index) => (

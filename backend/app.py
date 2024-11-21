@@ -895,27 +895,27 @@ Do not include any extra text before or after the JSON object."""
         return jsonify({'error': str(e)}), 500
 
 @app.route('/generate_examples', methods=['POST'])
-@app.route('/api/generate_examples', methods=['POST']) 
 def generate_examples():
     data = request.get_json()
     text = data.get('text', '')
     topic = data.get('topic', '')
-    cached = data.get('useCached', True)  # New parameter to control cache usage
+    use_cached = data.get('useCached', True)
 
-    if not text:
-        return jsonify({'error': 'Missing text'}), 400
+    # Validate required parameters
+    if not text or not topic:
+        return jsonify({'error': 'Missing required parameters: text and topic'}), 400
 
     try:
         # Check cache first if enabled
         cache_key = f"example_{topic}_{hash(text)}"
-        if cached:
+        if use_cached:
             cached_response = app.config.get(cache_key)
             if cached_response:
                 return jsonify(cached_response)
 
         perplexity_key = os.getenv('PERPLEXITY_API_KEY')
         if not perplexity_key:
-            return jsonify({'error': 'Perplexity API key not configured'}), 400
+            return jsonify({'error': 'Perplexity API key not configured'}), 500
 
         headers = {
             'Authorization': f'Bearer {perplexity_key}',

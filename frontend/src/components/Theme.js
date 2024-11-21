@@ -54,6 +54,8 @@ const theme = createTheme({
       borderRadius: '8px',
       display: 'flex',
       alignItems: 'center',
+      color: '#fff',
+      backgroundColor: '#00c464',
       '& span': {
         verticalAlign: 'middle',
       },

@@ -53,7 +53,7 @@ const Navigation = ({ isOpen, setIsOpen }) => {
         borderRadius: isOpen ? '8px' : '50%',
         width: isOpen ? (isMobile ? '60px' : '85%') : '40px',
         height: '40px',
-        minWidth: isMobile ? '60px' : (isOpen ? 'auto' : '40px'),
+        minWidth: isMobile ? '40px' : (isOpen ? 'auto' : '40px'),
         '&:hover': {
             backgroundColor: theme.palette.secondary.main,
             color: theme.palette.background.main
@@ -69,7 +69,7 @@ const Navigation = ({ isOpen, setIsOpen }) => {
         borderRadius: isOpen ? '8px' : '50%',
         width: isOpen ? (isMobile ? '60px' : '85%') : '40px',
         height: '40px',
-        minWidth: isMobile ? '60px' : (isOpen ? 'auto' : '40px'),
+        minWidth: isMobile ? '40px' : (isOpen ? 'auto' : '40px'),
         '&:hover': {
             backgroundColor: theme.palette.secondary.main,
             color: theme.palette.background.main,
