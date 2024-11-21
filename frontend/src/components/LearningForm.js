@@ -52,8 +52,12 @@ const LearningForm = ({ onSubmit }) => {
         <ThemeProvider theme={theme}>
             <Container maxWidth="sm">
                 <Box sx={{ mt: 4, mb: 4 }}>
-                    <Typography variant="h2" component="h1" gutterBottom align="center">
+                    <img src="logo.png" alt="logo" style={{ borderRadius: '50%', height: '100px', width: '100px', marginLeft: 'auto', marginRight: 'auto', display: 'block', margin: '0 auto', marginBottom: '1.5rem' }}/>
+                    <Typography variant="h1" component="h1" gutterBottom align="center">
                         Gyaan Learning
+                    </Typography>
+                    <Typography variant="subtitle1" component="h4" gutterBottom align="center">
+                        Start Your Personalized Learning Journey
                     </Typography>
                     <form onSubmit={handleSubmit}>
                         <TextField

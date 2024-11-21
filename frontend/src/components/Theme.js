@@ -4,7 +4,7 @@ const theme = createTheme({
   typography: {
     fontFamily: 'Lato',
     h1: {
-      fontSize: '2.5rem',
+      fontSize: '3rem',
       fontWeight: 600,
       fontFamily: 'Poppins',
     },
@@ -40,6 +40,10 @@ const theme = createTheme({
       margin: '.6rem .5rem .6rem .5rem',
       transition: 'all 0.2s ease-in-out',
       borderRadius: '12px',
+    },
+    subtitle1: {
+      fontSize: '1.3rem',
+      fontWeight: 400,
     },
   },
   components: {
