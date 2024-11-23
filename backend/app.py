@@ -815,13 +815,22 @@ def get_mini_module(id):
 def generate_questions():
     data = request.get_json()
     text = data.get('text', '')
+    topic = data.get('topic', '')
+    cached = data.get('useCached', True)  # New parameter to control cache usage
 
     if not text:
         return jsonify({'error': 'Missing text'}), 400
 
     try:
+        # Check cache first if enabled
+        cache_key = f"questions_{topic}_{hash(text)}"
+        if cached:
+            cached_response = app.config.get(cache_key)
+            if cached_response:
+                return jsonify(cached_response)
+
         # Construct the instruction
-        instructions = f"""Based on the following text, generate 3 simple comprehension questions that could be used to test understanding. one is practice, one is theoretical, one is historical:
+        instructions = f"""Based on the following text, generate 3 simple comprehension questions that could be used to test understanding. One is practice, one is theoretical, one is historical:
 
 {text}
 
@@ -842,7 +851,7 @@ Ensure that:
 
 Do not include any extra text before or after the JSON object."""
 
-        # Create message using the new API syntax
+        # Create the message using the AI API
         message = client.messages.create(
             model=HAIKU_MODEL,
             max_tokens=500,
@@ -865,23 +874,18 @@ Do not include any extra text before or after the JSON object."""
         try:
             # Try to parse the JSON directly first
             questions_data = json.loads(response_content)
-            return jsonify(questions_data)
         except json.JSONDecodeError:
             # If direct parsing fails, try to extract JSON using regex
             import re
             json_match = re.search(r'\{.*\}', response_content, re.DOTALL)
             if json_match:
                 json_text = json_match.group(0)
-                
                 # Replace single quotes with double quotes
                 json_text = json_text.replace("'", '"')
-                
                 # Remove trailing commas
                 json_text = re.sub(r',\s*([}\]])', r'\1', json_text)
-                
                 try:
                     questions_data = json.loads(json_text)
-                    return jsonify(questions_data)
                 except json.JSONDecodeError as e:
                     print(f"JSON decoding failed: {e}")
                     print(f"Invalid JSON text: {json_text}")
@@ -889,6 +893,11 @@ Do not include any extra text before or after the JSON object."""
             else:
                 print(f"No JSON object found in the AI response: {response_content}")
                 return jsonify({'error': 'AI response did not contain a valid JSON object'}), 500
+
+        # Cache the response
+        app.config[cache_key] = questions_data
+
+        return jsonify(questions_data)
 
     except Exception as e:
         print(f"Error generating questions: {str(e)}")
@@ -931,7 +940,7 @@ def generate_examples():
                 },
                 {
                     "role": "user",
-                    "content": f"Find a specific real-world example of this concept from {topic}: '{text}'. Keep the example under 100 words and include citation numbers in the text that match the returned citations. maximum 3 paragraphs."
+                    "content": f"Find a specific real-world example of this concept from {topic}: '{text}'. Keep the example under 100 words and include citation numbers in the text that match the returned citations. maximum 3 paragraphs. hard maximum 150 words"
                 }
             ],
             "max_tokens": 1000,

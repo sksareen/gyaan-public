@@ -95,6 +95,8 @@ const LearningForm = ({ onSubmit }) => {
                                 InputProps={{
                                     disableUnderline: true,
                                 }}
+                                multiline
+                                rows={4}
                                 sx={{ 
                                     ml: 1,
                                     '& .MuiInputBase-root': {

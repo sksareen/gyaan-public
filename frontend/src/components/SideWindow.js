@@ -228,7 +228,7 @@ const SideWindow = ({
                             fontSize: '0.95rem'
                           }}
                         >
-                          {example.description}
+                          {formatMarkdownText(example.description)}
                         </Typography>
                         
                         {citations.length > 0 && (
