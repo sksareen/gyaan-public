@@ -78,7 +78,7 @@ const QuestionPanel = ({ topic, onExplanationReceived, questions = [], level }) 
                   textAlign: 'left',
                   textTransform: 'none',
                   borderColor: theme.palette.primary.light,
-                  color: theme.palette.text.primary,
+                  color: theme.palette.text.background,
                   margin: '1px',
                   borderRadius: '12px',
                   fontWeight: '600',
