@@ -599,6 +599,10 @@ def explain_sentence():
 
         if not sentence or not topic:
             return jsonify({'error': 'Missing required parameters'}), 400
+        
+    except Exception as e:
+        print(f"Error in explain_sentence: {str(e)}")
+        return jsonify({'error': str(e)}), 500
 
     try:
         # Get the last conversation for this topic if it exists
