@@ -3,8 +3,7 @@ services:
     name: gyaan-backend
     env: python
     buildCommand: cd backend && pip install -r requirements.txt
-    startCommand: cd backend && gunicorn app:app
-    envVars:
+    startCommand: cd backend && gunicorn app:app    envVars:
       - key: ANTHROPIC_API_KEY
         sync: false
       - key: EXA_API_KEY

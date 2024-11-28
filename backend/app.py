@@ -23,23 +23,25 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # Load environment variables
-load_dotenv()
+load_dotenv(override=True)
+
+# Add debug logging for environment variables
+logger.debug("ANTHROPIC_API_KEY present: %s", bool(os.getenv('ANTHROPIC_API_KEY')))
+logger.debug("EXA_API_KEY present: %s", bool(os.getenv('EXA_API_KEY')))
 
 # Validate required environment variables
 required_env_vars = ['ANTHROPIC_API_KEY', 'EXA_API_KEY']
 missing_vars = [var for var in required_env_vars if not os.getenv(var)]
 if missing_vars:
+    logger.error(f"Missing environment variables: {', '.join(missing_vars)}")
+    logger.error("Please ensure .env file exists and contains required variables")
     raise EnvironmentError(f"Missing required environment variables: {', '.join(missing_vars)}")
 
 # Initialize Flask app
 app = Flask(__name__)
 CORS(app, resources={
     r"/*": {
-        "origins": [
-            "http://localhost:3000",
-            "https://*.vercel.app",  # Your Vercel frontend domain
-            "https://*.your-domain.com"
-        ],
+        "origins": ["http://localhost:3000"],
         "methods": ["GET", "POST", "OPTIONS"],
         "allow_headers": ["Content-Type", "Authorization"],
         "supports_credentials": True
@@ -581,16 +583,22 @@ def add_header(response):
     return response
 
 @app.route('/explain-sentence', methods=['POST', 'OPTIONS'])
+@handle_ai_request()
 def explain_sentence():
     if request.method == 'OPTIONS':
-        return '', 204
-        
-    data = request.get_json()
-    sentence = data.get('sentence', '')
-    topic = data.get('topic', '')
+        response = make_response()
+        response.headers.add('Access-Control-Allow-Origin', 'http://localhost:3000')
+        response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
+        response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
+        return response, 200
 
-    if not sentence or not topic:
-        return jsonify({'error': 'Missing sentence or topic'}), 400
+    try:
+        data = request.get_json()
+        sentence = data.get('sentence')
+        topic = data.get('topic')
+
+        if not sentence or not topic:
+            return jsonify({'error': 'Missing required parameters'}), 400
 
     try:
         # Get the last conversation for this topic if it exists
@@ -631,8 +639,8 @@ Make every word count - pack in meaning while maintaining readability."""
         
         return jsonify({'explanation': explanation})
     except Exception as e:
-        print(f"Server Error: {str(e)}")
-        return jsonify({'error': f'Server error: {str(e)}'}), 500
+        logger.error(f"Error in explain_sentence: {str(e)}")
+        return jsonify({'error': 'Internal server error'}), 500
 
 @app.route('/generate_learning_cards', methods=['POST', 'OPTIONS'])
 def generate_learning_cards():
