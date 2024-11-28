@@ -1,6 +1,4 @@
 import React, { useState, useEffect, useRef } from 'react';
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
 import { formatMarkdownText } from '../utils/textFormatting';
 import InteractiveText from './InteractiveText';
 import { generateQuestions, generateExamples } from '../services/api';
@@ -10,7 +8,6 @@ import CloseIcon from '@mui/icons-material/Close';
 import BookmarkIcon from '@mui/icons-material/Bookmark';
 import BookmarkBorderIcon from '@mui/icons-material/BookmarkBorder';
 import { useTheme } from '@mui/material/styles';
-import Paper from '@mui/material/Paper';
 
 const styles = {
     exampleBox: {

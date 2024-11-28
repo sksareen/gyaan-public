@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
-import { Box, Typography, CircularProgress, TextField, Button } from '@mui/material';
+import { Box, CircularProgress, Button } from '@mui/material';
 import { explainSentence } from '../services/api';
-import { formatMarkdownText } from '../utils/textFormatting';
 import theme from './Theme';
 import SideWindow from './SideWindow';
 

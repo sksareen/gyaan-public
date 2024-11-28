@@ -3,17 +3,14 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Container, Typography, Box, Button, CircularProgress, Paper, IconButton } from '@mui/material';
 import ReactMarkdown from 'react-markdown';
 import InteractiveText from './InteractiveText';
-import CloseIcon from '@mui/icons-material/Close';
 import { explainSentence } from '../services/api';
 import { formatMarkdownText } from '../utils/textFormatting';
 import remarkGfm from 'remark-gfm';
 import QuestionPanel from './QuestionPanel';
 import SideWindow from './SideWindow';
-import Link from '@mui/material/Link';
 
 const MiniModuleView = () => {
   const { id } = useParams();
-  const navigate = useNavigate();
   const [moduleData, setModuleData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [explanation, setExplanation] = useState('');

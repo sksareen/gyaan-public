@@ -1,15 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { Container, CircularProgress, Box, Typography, Button } from '@mui/material';
 import LearningForm from './components/LearningForm';
-import Roadmap from './components/Roadmap';
-import ModuleContent from './components/ModuleContent';
-import Goals from './components/Goals';
-import { generateRoadmap, generateModuleContent, generateGoals, generateLearningCards, generateMiniModule } from './services/api';
+import { generateMiniModule } from './services/api';
 import Navigation from './components/Navigation';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import NotebookView from './components/NotebookView';
-// import ModuleViewer from './components/ModuleViewer';
-// import LearningCard from './components/LearningCard';
 import MiniModuleView from './components/MiniModuleView';
 import SavedView from './components/SavedView';
 import Settings from './components/Settings';
@@ -19,10 +14,7 @@ import Tooltip from '@mui/material/Tooltip';
 
 function App() {
     const [loading, setLoading] = useState(false);
-    const [roadmapData, setRoadmapData] = useState(null);
-    const [moduleData, setModuleData] = useState(null);
-    const [resources, setResources] = useState([]);
-    const [goals, setGoals] = useState([]);
+
     const [currentTopic, setCurrentTopic] = useState('');
     const [currentProficiency, setCurrentProficiency] = useState('');
     const [loadingType, setLoadingType] = useState('');
@@ -31,9 +23,6 @@ function App() {
         const saved = localStorage.getItem('savedModules');
         return saved ? JSON.parse(saved) : [];
     });
-    const [selectedGoals, setSelectedGoals] = useState([]);
-    const [learningCards, setLearningCards] = useState([]);
-    const [miniModuleLoading, setMiniModuleLoading] = useState(false);
     const [isOpen, setIsOpen] = useState(false);
     const [isMobile, setIsMobile] = useState(window.innerWidth <= 430);
 
@@ -60,41 +49,6 @@ function App() {
         } catch (error) {
             console.error('Error generating module:', error);
             alert('Failed to generate module. Please try again.');
-        } finally {
-            setLoading(false);
-            setLoadingType('');
-        }
-    };
-
-    const handleGoalsSelected = async (goalsSelected) => {
-        console.log('Received goals in App component:', goalsSelected);
-        setSelectedGoals(goalsSelected);
-        setLoading(true);
-        setLoadingType('roadmap');
-        try {
-            const roadmapResponse = await generateRoadmap(currentTopic, goalsSelected, currentProficiency);
-            setRoadmapData(roadmapResponse.roadmap);
-            setResources(roadmapResponse.resources);
-            setShowConfirmButton(true);
-        } catch (error) {
-            console.error('Error generating content:', error);
-        } finally {
-            setLoading(false);
-            setLoadingType('');
-        }
-    };
-
-    const handleConfirmRoadmap = async () => {
-        setLoading(true);
-        setLoadingType('module');
-        try {
-            const moduleResponse = await generateModuleContent(currentTopic, goals, currentProficiency);
-            console.log('Module Response:', moduleResponse);
-            setModuleData(moduleResponse);
-            const moduleId = saveModule(moduleResponse);
-            setShowConfirmButton(false);
-        } catch (error) {
-            console.error('Error generating module content:', error);
         } finally {
             setLoading(false);
             setLoadingType('');
@@ -163,11 +117,6 @@ function App() {
                     }}
                 >
                     <CircularProgress sx={{ mb: 2 }} />
-                    <Typography variant="h6">
-                        {loadingType === 'goals' && 'Generating learning goals...'}
-                        {loadingType === 'roadmap' && 'Creating your personalized roadmap...'}
-                        {loadingType === 'module' && 'Preparing detailed learning content...'}
-                    </Typography>
                 </Box>
             )}
             <Box sx={{ 
@@ -200,21 +149,6 @@ function App() {
                         <Route path="/" element={
                             <Container maxWidth="lg" sx={{ p: 0 }}>
                                 <LearningForm onSubmit={handleFormSubmit} />
-                                {goals.length > 0 && (
-                                    <Box id="goals-section">
-                                        <Goals goals={goals} onGoalsSelected={handleGoalsSelected} />
-                                    </Box>
-                                )}
-                                {roadmapData && (
-                                    <Box id="roadmap-section">
-                                        <Roadmap roadmapData={roadmapData} resources={resources} />
-                                    </Box>
-                                )}
-                                {moduleData && (
-                                    <Box id="module-section">
-                                        <ModuleContent moduleData={moduleData} />
-                                    </Box>
-                                )}
                                 {showConfirmButton && (
                                     <Box sx={{ display: 'flex', justifyContent: 'center', my: 4 }}>
                                         <Button

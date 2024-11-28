@@ -7,7 +7,6 @@ import {
     CardContent, 
     CardActions,
     Grid,
-    Chip,
     IconButton,
 } from '@mui/material';
 import { useNavigate } from 'react-router-dom';

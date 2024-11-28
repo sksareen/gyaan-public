@@ -1,5 +1,4 @@
 import { createTheme } from '@mui/material/styles';
-import { alignProperty } from '@mui/material/styles/cssUtils';
 
 const theme = createTheme({
   typography: {

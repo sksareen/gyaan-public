@@ -11,15 +11,13 @@ import {
     Typography
 } from '@mui/material';
 import { ThemeProvider, useTheme } from '@mui/material/styles';
-import theme from './Theme';
-import { generateGoals, generateMiniModule } from '../services/api';
+import { generateMiniModule } from '../services/api';
 
 const LearningForm = ({ onSubmit }) => {
     const [topic, setTopic] = useState('');
     const [proficiency, setProficiency] = useState('beginner');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
-    const [background, setBackground] = useState('');
 
     const handleSubmit = async (e) => {
         e.preventDefault();
