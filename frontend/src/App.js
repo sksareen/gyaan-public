@@ -18,7 +18,6 @@ function App() {
     const [currentTopic, setCurrentTopic] = useState('');
     const [currentProficiency, setCurrentProficiency] = useState('');
     const [loadingType, setLoadingType] = useState('');
-    const [showConfirmButton, setShowConfirmButton] = useState(false);
     const [savedModules, setSavedModules] = useState(() => {
         const saved = localStorage.getItem('savedModules');
         return saved ? JSON.parse(saved) : [];
@@ -60,17 +59,13 @@ function App() {
             id: Date.now(),
             topic: currentTopic,
             proficiency: currentProficiency,
-            goals: goals,
-            selectedGoals: selectedGoals,
-            roadmap: roadmapData,
-            resources: resources,
             moduleContent: {
                 ...moduleData,
-                topic: currentTopic
+                topic: currentTopic,
             },
-            createdAt: new Date().toISOString()
+            createdAt: new Date().toISOString(),
         };
-        
+
         const updatedModules = [...savedModules, newModule];
         setSavedModules(updatedModules);
         localStorage.setItem('savedModules', JSON.stringify(updatedModules));
@@ -149,7 +144,7 @@ function App() {
                         <Route path="/" element={
                             <Container maxWidth="lg" sx={{ p: 0 }}>
                                 <LearningForm onSubmit={handleFormSubmit} />
-                                {showConfirmButton && (
+                                {/* {showConfirmButton && (
                                     <Box sx={{ display: 'flex', justifyContent: 'center', my: 4 }}>
                                         <Button
                                             variant="contained"
@@ -159,7 +154,7 @@ function App() {
                                             Generate Detailed Content
                                         </Button>
                                     </Box>
-                                )}
+                                )} */}
                             </Container>
                         } />
                     </Routes>
