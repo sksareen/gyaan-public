@@ -8,4 +8,4 @@ python app.py &
 
 # Start the frontend development server
 cd ../frontend
-npm start
+npm run build
