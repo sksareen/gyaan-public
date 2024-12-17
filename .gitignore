@@ -26,3 +26,12 @@ venv/
 env/
 .env/
 ENV/
+
+# Vercel
+.vercel/
+frontend/.vercel/
+.vercel
+.vercel/README.txt
+.vercel/project.json
+.vercel /project.json
+.vercel /README.txt
