@@ -21,6 +21,10 @@ const Navigation = ({ isOpen, setIsOpen }) => {
         return () => window.removeEventListener('resize', handleResize);
     }, []);
 
+    const toggleSidebar = () => {
+        setIsOpen(!isOpen);
+    };
+
     const scrollToSection = (elementId) => {
         setTimeout(() => {
             const element = document.getElementById(elementId);
@@ -195,7 +199,7 @@ const Navigation = ({ isOpen, setIsOpen }) => {
                 </Toolbar>
                 {!isMobile && (
                     <IconButton
-                        onClick={() => setIsOpen(!isOpen)}
+                        onClick={toggleSidebar}
                         sx={{
                             ...buttonSx2,
                             position: 'relative',
