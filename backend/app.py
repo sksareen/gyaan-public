@@ -43,8 +43,10 @@ CORS(app, resources={
     r"/*": {
         "origins": ["http://localhost:3000", "https://gyaan-app.vercel.app"],
         "methods": ["GET", "POST", "OPTIONS"],
-        "allow_headers": ["Content-Type", "Authorization"],
-        "supports_credentials": True
+        "allow_headers": ["Content-Type", "Authorization", "Accept", "Origin", "X-Requested-With"],
+        "expose_headers": ["Content-Length", "X-JSON"],
+        "supports_credentials": True,
+        "max_age": 600
     }
 })
 
@@ -1066,6 +1068,17 @@ def initialize_api_clients():
 
 # Call initialize_api_clients when the app starts
 initialize_api_clients()
+
+@app.errorhandler(500)
+def handle_500_error(e):
+    logging.error(f"Internal server error: {str(e)}")
+    return jsonify(error="Internal server error", message=str(e)), 500
+
+@app.after_request
+def after_request(response):
+    # Log CORS headers for debugging
+    logging.debug("CORS Headers: %s", dict(response.headers))
+    return response
 
 if __name__ == '__main__':
     print('[app.py] __main__ starting')
