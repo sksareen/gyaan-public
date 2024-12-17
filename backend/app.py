@@ -39,13 +39,17 @@ if missing_vars:
 
 # Initialize Flask app
 app = Flask(__name__)
+
+# Define allowed origins
+allowed_origins = [
+    "http://localhost:3000",
+    "https://gyaan-app.vercel.app"
+]
+
+# Initialize CORS
 CORS(app, resources={
     r"/*": {
-        "origins": [
-            "http://localhost:3000",
-            "https://gyaan-app.vercel.app",
-            "https://gyaan-public.onrender.com"
-        ],
+        "origins": allowed_origins,
         "methods": ["GET", "POST", "OPTIONS"],
         "allow_headers": ["Content-Type", "Authorization", "Accept", "Origin", "X-Requested-With"],
         "expose_headers": ["Content-Length", "X-JSON"],
@@ -595,11 +599,11 @@ def add_cors_headers(response):
     return response
 
 @app.route('/explain-sentence', methods=['POST', 'OPTIONS'])
-@handle_ai_request()
 def explain_sentence():
     if request.method == 'OPTIONS':
-        return add_cors_headers(make_response()), 200
-
+        # Respond to preflight request
+        return make_response('', 200)
+    
     try:
         data = request.get_json()
         sentence = data.get('sentence')
@@ -1082,22 +1086,12 @@ def handle_500_error(e):
 
 @app.after_request
 def after_request(response):
-    # Allow specific origin
     origin = request.headers.get('Origin')
-    if origin in ["http://localhost:3000", "https://gyaan-app.vercel.app"]:
+    if origin in allowed_origins:
         response.headers.add('Access-Control-Allow-Origin', origin)
-    
-    # Allow credentials
     response.headers.add('Access-Control-Allow-Credentials', 'true')
-    
-    # Allow specific headers
-    response.headers.add('Access-Control-Allow-Headers', 
-        'Content-Type, Authorization, Accept, Origin, X-Requested-With')
-    
-    # Allow specific methods
-    response.headers.add('Access-Control-Allow-Methods', 
-        'GET, PUT, POST, DELETE, OPTIONS')
-        
+    response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization,Accept,Origin,X-Requested-With')
+    response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
     return response
 
 if __name__ == '__main__':
