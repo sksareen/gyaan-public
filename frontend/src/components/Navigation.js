@@ -115,7 +115,10 @@ const Navigation = ({ isOpen, setIsOpen }) => {
                         {!isMobile && (
                             <>
                                 <Box sx={{ mt: 4, mb: 4 }}>
-                                    <img src="/logo.png" alt="logo" title="Gyaan Learning"
+                                    <img 
+                                        src={process.env.PUBLIC_URL + '/logo.png'} 
+                                        alt="logo" 
+                                        title="Gyaan Learning"
                                         style={{ 
                                             borderRadius: '50%',
                                             height: isOpen ? '120px' : '60px',

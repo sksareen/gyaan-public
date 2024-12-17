@@ -41,7 +41,11 @@ if missing_vars:
 app = Flask(__name__)
 CORS(app, resources={
     r"/*": {
-        "origins": ["http://localhost:3000", "https://gyaan-app.vercel.app"],
+        "origins": [
+            "http://localhost:3000",
+            "https://gyaan-app.vercel.app",
+            "https://gyaan-public.onrender.com"
+        ],
         "methods": ["GET", "POST", "OPTIONS"],
         "allow_headers": ["Content-Type", "Authorization", "Accept", "Origin", "X-Requested-With"],
         "expose_headers": ["Content-Length", "X-JSON"],
@@ -584,15 +588,17 @@ def add_header(response):
         response.headers['Cache-Control'] = 'no-store'
     return response
 
+def add_cors_headers(response):
+    response.headers.add('Access-Control-Allow-Origin', 'https://gyaan-app.vercel.app')
+    response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
+    response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
+    return response
+
 @app.route('/explain-sentence', methods=['POST', 'OPTIONS'])
 @handle_ai_request()
 def explain_sentence():
     if request.method == 'OPTIONS':
-        response = make_response()
-        response.headers.add('Access-Control-Allow-Origin', 'http://localhost:3000')
-        response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
-        response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
-        return response, 200
+        return add_cors_headers(make_response()), 200
 
     try:
         data = request.get_json()
@@ -1076,8 +1082,22 @@ def handle_500_error(e):
 
 @app.after_request
 def after_request(response):
-    # Log CORS headers for debugging
-    logging.debug("CORS Headers: %s", dict(response.headers))
+    # Allow specific origin
+    origin = request.headers.get('Origin')
+    if origin in ["http://localhost:3000", "https://gyaan-app.vercel.app"]:
+        response.headers.add('Access-Control-Allow-Origin', origin)
+    
+    # Allow credentials
+    response.headers.add('Access-Control-Allow-Credentials', 'true')
+    
+    # Allow specific headers
+    response.headers.add('Access-Control-Allow-Headers', 
+        'Content-Type, Authorization, Accept, Origin, X-Requested-With')
+    
+    # Allow specific methods
+    response.headers.add('Access-Control-Allow-Methods', 
+        'GET, PUT, POST, DELETE, OPTIONS')
+        
     return response
 
 if __name__ == '__main__':
