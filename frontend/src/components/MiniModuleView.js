@@ -8,6 +8,7 @@ import { formatMarkdownText } from '../utils/textFormatting';
 import remarkGfm from 'remark-gfm';
 import QuestionPanel from './QuestionPanel';
 import SideWindow from './SideWindow';
+import CloseIcon from '@mui/icons-material/Close';
 
 const MiniModuleView = () => {
   const { id } = useParams();
@@ -19,6 +20,7 @@ const MiniModuleView = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [savedExplanations, setSavedExplanations] = useState([]);
   const [selectedText, setSelectedText] = useState('');
+  const [showHint, setShowHint] = useState(true);
 
   useEffect(() => {
     const fetchModule = async () => {
@@ -44,6 +46,18 @@ const MiniModuleView = () => {
       setSavedExplanations(saved);
     }
   }, [moduleData?.topic]);
+
+  useEffect(() => {
+    const hasSeenHint = localStorage.getItem('hasSeenInteractionHint');
+    if (hasSeenHint) {
+      setShowHint(false);
+    }
+  }, []);
+
+  const dismissHint = () => {
+    localStorage.setItem('hasSeenInteractionHint', 'true');
+    setShowHint(false);
+  };
 
   const components = {
     p: ({ children, ...props }) => {
@@ -213,6 +227,39 @@ const MiniModuleView = () => {
 
   return (
     <Container maxWidth="md">
+      {showHint && (
+        <Paper
+          elevation={0}
+          sx={{
+            position: 'sticky',
+            top: 16,
+            zIndex: 1000,
+            mt: 2,
+            mb: 2,
+            p: 2,
+            border: '1px solid',
+            borderColor: 'primary.main',
+            backgroundColor: 'primary.50',
+            fontWeight: 'bold',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            borderRadius: 2,
+            transition: 'opacity 0.3s ease',
+            '&:hover': {
+              opacity: 0.9,
+            }
+          }}
+        >
+          <Typography variant="body2" color="primary.main">
+            💡 Pro tip: Hold Shift + hover or select any text to explore deeper explanations
+          </Typography>
+          <IconButton size="small" onClick={dismissHint} color="primary">
+            <CloseIcon fontSize="small" />
+          </IconButton>
+        </Paper>
+      )}
+      
       <Box sx={{ mt: 4, mb: 6 }}>
         {/* Main Content Section */}
         <Box mb={3}>

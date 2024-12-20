@@ -156,7 +156,7 @@ const LearningForm = ({ onSubmit }) => {
                                     }
                                 }}
                             />
-                            
+                                                       
                             <Box sx={{
                                 display: 'flex',
                                 gap: 2,
@@ -227,6 +227,19 @@ const LearningForm = ({ onSubmit }) => {
                             </Typography>
                         )}
                     </form>
+                    <Typography
+                        variant="caption"
+                        color="text.secondary"
+                        sx={{
+                            px: 1,
+                            py: 0.5,
+                            ml: 1,
+                            fontSize: '0.9rem',
+                            opacity: 0.7
+                        }}
+                    >
+                        Pro tip: Press {navigator.platform.includes('Mac') ? '⌘' : 'Ctrl'}+Enter to submit
+                    </Typography>
                 </Box>
             </Container>
         </ThemeProvider>
