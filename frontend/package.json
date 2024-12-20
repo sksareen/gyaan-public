@@ -24,7 +24,9 @@
     "rehype-react": "^8.0.0",
     "remark-rehype": "^11.1.1",
     "@mapbox/rehype-prism": "^0.9.0",
-    "web-vitals": "^2.1.4"
+    "web-vitals": "^2.1.4",
+    "@vercel/analytics": "^0.1.1",
+    "@vercel/speed-insights": "^0.1.1"
   },
   "scripts": {
     "start": "react-scripts start",

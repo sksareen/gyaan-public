@@ -11,6 +11,8 @@ import Settings from './components/Settings';
 import FeedbackIcon from '@mui/icons-material/Feedback';
 import IconButton from '@mui/material/IconButton';
 import Tooltip from '@mui/material/Tooltip';
+import { Analytics } from "@vercel/analytics/react"
+import { SpeedInsights } from "@vercel/speed-insights/react"
 
 function App() {
     const [loading, setLoading] = useState(false);
@@ -160,6 +162,8 @@ function App() {
                     </Routes>
                 </Box>
             </Box>
+            <Analytics />
+            <SpeedInsights />
         </Router>
     );
 }
