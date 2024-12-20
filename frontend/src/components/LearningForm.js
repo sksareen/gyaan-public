@@ -63,7 +63,7 @@ const LearningForm = ({ onSubmit }) => {
                 minHeight: '75vh' 
             }}>
                 <Box sx={{ mt: 4, mb: 4, minWidth: '320px', width: '100%' }}>
-                    <img src={`${process.env.PUBLIC_URL}/logo.png`} alt="logo" style={{ borderRadius: '50%', height: '140px', width: '140px', marginLeft: 'auto', marginRight: 'auto', display: 'block', margin: '0 auto', marginBottom: '2rem', boxShadow: '2px 0px 7px -3px #00000070' }}/>
+                    <img src={`${process.env.REACT_APP_PUBLIC_URL}/logo.png`} alt="logo" style={{ borderRadius: '50%', height: '140px', width: '140px', marginLeft: 'auto', marginRight: 'auto', display: 'block', margin: '0 auto', marginBottom: '2rem', boxShadow: '2px 0px 7px -3px #00000070' }}/>
                     <Typography variant="h1" component="h1" gutterBottom align="center">
                         Gyaan Learning
                     </Typography>

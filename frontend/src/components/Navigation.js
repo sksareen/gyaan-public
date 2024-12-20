@@ -120,7 +120,7 @@ const Navigation = ({ isOpen, setIsOpen }) => {
                             <>
                                 <Box sx={{ mt: 4, mb: 4 }}>
                                     <img 
-                                        src={process.env.PUBLIC_URL + '/logo.png'} 
+                                        src={`${process.env.REACT_APP_PUBLIC_URL}/logo.png`} 
                                         alt="logo" 
                                         title="Gyaan Learning"
                                         style={{ 
