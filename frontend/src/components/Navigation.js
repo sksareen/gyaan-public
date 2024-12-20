@@ -86,7 +86,7 @@ const Navigation = ({ isOpen, setIsOpen }) => {
                 position="fixed" 
                 sx={{
                     width: isMobile ? '100%' : (isOpen ? '220px' : '80px'),
-                    height: isMobile ? '80px' : '100vh',
+                    height: isMobile ? '80px' : '100%',
                     backgroundColor: theme.palette.primary.main,
                     backdropFilter: 'blur(8px)',
                     color: theme.components.MuiTypography.styleOverrides.root.color,
