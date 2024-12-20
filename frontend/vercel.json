@@ -21,8 +21,8 @@
       "dest": "/index.html"
     },
     {
-      "src": "/logo.png",
-      "dest": "/logo.png"
+      "src": "/logo192.png",
+      "dest": "/logo192.png"
     }
   ]
 }
