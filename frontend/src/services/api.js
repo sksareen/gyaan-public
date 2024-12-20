@@ -176,23 +176,3 @@ export const generateExamples = async (text, topic, useCached = true) => {
         throw error;
     }
 };
-
-export const updateSettings = async (settings) => {
-    try {
-        const response = await api.post('/api/settings', settings);
-        return response.data;
-    } catch (error) {
-        console.error('Error in updateSettings:', error.response?.data || error.message);
-        throw error;
-    }
-};
-
-export const getSettings = async () => {
-    try {
-        const response = await api.get('/api/settings');
-        return response.data;
-    } catch (error) {
-        console.error('Error in getSettings:', error.response?.data || error.message);
-        throw error;
-    }
-};
