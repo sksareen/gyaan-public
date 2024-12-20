@@ -915,24 +915,42 @@ Do not include any extra text before or after the JSON object."""
         print(f"Error generating questions: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
+# Add this near your other decorators
+def handle_perplexity_request(retries=3, timeout=30):
+    def decorator(f):
+        @wraps(f)
+        def decorated_function(*args, **kwargs):
+            last_error = None
+            for attempt in range(retries):
+                try:
+                    return f(*args, **kwargs)
+                except requests.exceptions.ReadTimeout:
+                    logger.warning(f"Perplexity API timed out, attempt {attempt + 1}/{retries}")
+                    time.sleep(2 ** attempt)  # Exponential backoff
+                    last_error = "Perplexity API timed out repeatedly"
+                except requests.exceptions.RequestException as e:
+                    logger.error(f"Perplexity API request failed: {str(e)}")
+                    time.sleep(2 ** attempt)
+                    last_error = str(e)
+                except Exception as e:
+                    logger.error(f"Unexpected error in Perplexity request: {str(e)}")
+                    raise
+            
+            # If we've exhausted all retries
+            return jsonify({'error': last_error}), 504
+        return decorated_function
+    return decorator
+
+# Update the generate_examples route
 @app.route('/generate_examples', methods=['POST'])
+@handle_perplexity_request(retries=3, timeout=45)
 def generate_examples():
-    data = request.get_json()
-    text = data.get('text', '')
-    topic = data.get('topic', '')
-    use_cached = data.get('useCached', True)
-
-    # Validate required parameters
-    if not text or not topic:
-        return jsonify({'error': 'Missing required parameters: text and topic'}), 400
-
     try:
-        # Check cache first if enabled
-        cache_key = f"example_{topic}_{hash(text)}"
-        if use_cached:
-            cached_response = app.config.get(cache_key)
-            if cached_response:
-                return jsonify(cached_response)
+        data = request.get_json()
+        
+        # Validate required parameters
+        if not data.get('text') or not data.get('topic'):
+            return jsonify({'error': 'Missing required parameters: text and topic'}), 400
 
         perplexity_key = os.getenv('PERPLEXITY_API_KEY')
         if not perplexity_key:
@@ -944,45 +962,73 @@ def generate_examples():
         }
 
         data_payload = {
-            "model": "llama-3.1-sonar-huge-128k-online",
+            "model": "llama-3.1-sonar-large-128k-online",
             "messages": [
                 {
-                    "role": "system", 
-                    "content": "You are an expert at finding real-world examples with verifiable sources."
+                    "role": "system",
+                    "content": (
+                        "Be precise and concise. You are an expert at finding real-world examples "
+                        "with verifiable sources."
+                    )
                 },
                 {
                     "role": "user",
-                    "content": f"Find a specific real-world example of this concept from {topic}: '{text}'. Keep the example under 100 words and include citation numbers in the text that match the returned citations. maximum 3 paragraphs."
+                    "content": (
+                        f"Find a specific real-world example of this concept from {data['topic']}: "
+                        f"'{data['text']}'. Keep the example under 100 words and include citation "
+                        "numbers in the text that match the returned citations. Maximum 3 paragraphs."
+                    )
                 }
             ],
             "max_tokens": 1000,
             "temperature": 0.2,
-            "return_citations": True,
-            "search_recency_filter": "year",
+            "top_p": 0.9,
+            "search_domain_filter": ["perplexity.ai"],
+            "return_images": False,
+            "return_related_questions": False,
+            "search_recency_filter": "month",
+            "top_k": 0,
+            "stream": False,
+            "presence_penalty": 0,
             "frequency_penalty": 1
         }
+
+        logger.debug("Perplexity API Request Payload: %s", data_payload)
 
         response = requests.post(
             "https://api.perplexity.ai/chat/completions",
             headers=headers,
             json=data_payload,
-            timeout=30
+            timeout=45  # Match the decorator
         )
 
+        # Log raw response text for debugging
+        logger.debug("Perplexity API Raw Response: %s", response.text)
+
         response_json = response.json()
-        
-        # Log the complete response for debugging
-        print("Perplexity API Complete Response:", response_json)
-        
-        content = response_json.get('choices', [{}])[0].get('message', {}).get('content', '')
+
+        # Now parse content and citations as needed.
+        # Adjust if Perplexity's response structure differs from typical openAI-like format
+        content = ""
+        if "choices" in response_json:
+            # If Perplexity returns choices array
+            content = (
+                response_json.get('choices', [{}])[0]
+                .get('message', {})
+                .get('content', '')
+            )
+        elif "completions" in response_json:
+            # If they return completions array (depends on their final specs)
+            content = response_json['completions'][0].get('text', '')
+
+        # If citations exist - adjust if they appear differently.
         citations = response_json.get('citations', [])
 
-        # Format citations properly
+        # Format citations
         formatted_citations = []
+        from urllib.parse import urlparse
         for url in citations:
             try:
-                # Extract domain name for display text
-                from urllib.parse import urlparse
                 parsed_url = urlparse(url)
                 display_text = parsed_url.netloc.replace('www.', '')
                 formatted_citations.append({
@@ -990,30 +1036,25 @@ def generate_examples():
                     'url': url
                 })
             except Exception as e:
-                logger.error(f"Error formatting citation URL {url}: {str(e)}")
-                continue
+                logger.error(f"Error formatting citation URL '{url}': {str(e)}")
 
-        # Create response data
+        # Build final response data
         response_data = {
             'examples': [{
-                'description': content,
+                'description': content or 'No content returned.',
                 'type': 'Real-world Example',
                 'timestamp': datetime.now().isoformat(),
-                'text': text,
-                'topic': topic
+                'text': data['text'],
+                'topic': data['topic']
             }],
-            'citations': formatted_citations  # Use the formatted citations
+            'citations': formatted_citations
         }
-        
-        # Cache the response
-        app.config[cache_key] = response_data
-        return jsonify(response_data)
+
+        return jsonify(response_data), 200
 
     except Exception as error:
-        logger.error(f"Error generating example: {str(error)}")
-        return jsonify({
-            'error': str(error)
-        }), 500
+        logger.error(f"Error in generate_examples: {str(error)}")
+        return jsonify({'error': str(error)}), 500
 
 # Add new route to get/set API keys
 @app.route('/api/settings', methods=['GET', 'POST'])

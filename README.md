@@ -8,7 +8,7 @@ Gyaan Learning is an AI-powered education platform that generates personalized l
 
 ## 🎯 Vision
 
-Learning should be addictive. It should be challenging and rewarding. It should be fun. We've all had times where our curiousity and interest in a topic is piqued, and we want to learn more. We fall into rabbit holes on the internet learning information for hours, but often for things that don't really matter.
+Learning should be addictive. It should be challenging and rewarding. It should be fun. We've all had times where our curiosity and interest in a topic is piqued, and we want to learn more. We fall into rabbit holes on the internet learning information for hours, but often for things that don't really matter.
 
 Gyaan Learning is an attempt to make learning fun, addictive, and rewarding.
 
@@ -21,15 +21,14 @@ We want to make personalised training paths that adapt to your learning style. E
 - 📚 Detailed content and resources for each learning module
 - 📝 Save modules to your notebook locally
 
-### Planned
+### Future
 - 🧠 Interactive practice exercises built-in
 - 📝 Easily answer questions about the content within the app
-
-### Future
 - 🔑 Google login
 - 💡 Smart recommendations based on learning style
 - 📊 Progress tracking and learning analytics
 - 🎯 Interactive roadmap visualization
+- 🔑 Ability to use your own API keys (e.g., Anthropic, Exa)
 
 ## 🛠️ Tech Stack
 
@@ -129,8 +128,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## 🙏 Acknowledgments
 
 - [Anthropic](https://www.anthropic.com/) for AI capabilities
-- [Exa](https://exa.ai/) for search functionality
-- All our contributors and supporters
+- [Perplexity](https://www.perplexity.ai/) for search functionality
 
 ## 📬 Contact
 
