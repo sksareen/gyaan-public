@@ -46,7 +46,7 @@ allowed_origins = [
     "https://gyaan-app.vercel.app"
 ]
 
-# Initialize CORS
+# Initialize CORS with Flask-CORS
 CORS(app, resources={
     r"/*": {
         "origins": allowed_origins,
@@ -587,15 +587,8 @@ def generate_module_content():
 
 @app.after_request
 def add_header(response):
-    print('[app.py] add_header starting')
     if 'Cache-Control' not in response.headers:
         response.headers['Cache-Control'] = 'no-store'
-    return response
-
-def add_cors_headers(response):
-    response.headers.add('Access-Control-Allow-Origin', 'https://gyaan-app.vercel.app')
-    response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
-    response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
     return response
 
 @app.route('/explain-sentence', methods=['POST', 'OPTIONS'])
@@ -1083,16 +1076,6 @@ initialize_api_clients()
 def handle_500_error(e):
     logging.error(f"Internal server error: {str(e)}")
     return jsonify(error="Internal server error", message=str(e)), 500
-
-@app.after_request
-def after_request(response):
-    origin = request.headers.get('Origin')
-    if origin in allowed_origins:
-        response.headers.add('Access-Control-Allow-Origin', origin)
-    response.headers.add('Access-Control-Allow-Credentials', 'true')
-    response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization,Accept,Origin,X-Requested-With')
-    response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
-    return response
 
 if __name__ == '__main__':
     print('[app.py] __main__ starting')
