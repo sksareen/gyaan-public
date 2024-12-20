@@ -8,6 +8,7 @@ import {
 } from '@mui/material';
 
 import theme from './Theme';
+import { updateSettings, getSettings } from '../services/api';
 
 const Settings = () => {
     const [apiKeys, setApiKeys] = useState({
@@ -21,8 +22,7 @@ const Settings = () => {
     });
 
     useEffect(() => {
-        fetch('/api/settings')
-            .then(res => res.json())
+        getSettings()
             .then(data => {
                 setStoredKeys({
                     perplexity: data.perplexity,
@@ -43,22 +43,12 @@ const Settings = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            const response = await fetch('/api/settings', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    perplexity: apiKeys.perplexity,
-                    claude: apiKeys.claude
-                })
+            await updateSettings({
+                perplexity: apiKeys.perplexity,
+                claude: apiKeys.claude
             });
 
-            if (!response.ok) {
-                throw new Error('Failed to save settings');
-            }
-
-            const data = await fetch('/api/settings').then(res => res.json());
+            const data = await getSettings();
             setStoredKeys({
                 perplexity: data.perplexity,
                 claude: data.claude

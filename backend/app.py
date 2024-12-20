@@ -1021,23 +1021,28 @@ def handle_settings():
     if request.method == 'POST':
         data = request.get_json()
         try:
-            # Update the API clients with new keys
-            if 'claude' in data:
+            # Update environment variables with user-provided keys
+            if 'claude' in data and data['claude']:
                 os.environ['ANTHROPIC_API_KEY'] = data['claude']
                 client = anthropic.Anthropic(api_key=data['claude'])
             
-            if 'perplexity' in data:
+            if 'perplexity' in data and data['perplexity']:
                 os.environ['PERPLEXITY_API_KEY'] = data['perplexity']
             
-            # Store keys securely (consider using a more secure storage in production)
-            with open('.env', 'w') as f:
-                if 'claude' in data:
-                    f.write(f"ANTHROPIC_API_KEY={data['claude']}\n")
-                if 'perplexity' in data:
-                    f.write(f"PERPLEXITY_API_KEY={data['perplexity']}\n")
+            # Don't write to .env file in production
+            if os.getenv('FLASK_ENV') != 'production':
+                env_path = os.path.join(os.path.dirname(__file__), '.env')
+                try:
+                    with open(env_path, 'w') as f:
+                        f.write(f"ANTHROPIC_API_KEY={os.getenv('ANTHROPIC_API_KEY')}\n")
+                        f.write(f"PERPLEXITY_API_KEY={os.getenv('PERPLEXITY_API_KEY')}\n")
+                except IOError as e:
+                    logger.warning(f"Could not write to .env file: {str(e)}")
             
             return jsonify({"message": "Settings updated successfully"})
+            
         except Exception as e:
+            logger.error(f"Error updating settings: {str(e)}")
             return jsonify({"error": str(e)}), 500
     
     elif request.method == 'GET':
