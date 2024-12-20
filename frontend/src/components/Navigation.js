@@ -116,7 +116,7 @@ const Navigation = ({ isOpen, setIsOpen }) => {
                         alignItems: 'center',
                         justifyContent: 'space-around',
                     }}>
-                        {!isMobile && (
+                        {/* {!isMobile && (
                             <>
                                 <Box sx={{ mt: 4, mb: 4 }}>
                                     <img 
@@ -138,7 +138,7 @@ const Navigation = ({ isOpen, setIsOpen }) => {
                                 </Box>
                                 <hr style={{ width: '90%', border: '.5px solid #fff', margin: '.5rem 0' }} />
                             </>
-                        )}
+                        )} */}
                         
                         <Button 
                             onClick={() => window.location.href = '/'}
